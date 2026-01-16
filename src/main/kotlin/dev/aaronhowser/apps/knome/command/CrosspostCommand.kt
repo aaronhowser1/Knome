@@ -33,14 +33,32 @@ object CrosspostCommand {
 			return
 		}
 
+		if (endLink == null) {
+			event.hook.sendMessage("End link is required.").queue()
+			return
+		}
+
 		event.deferReply(true).queue()
 
 		CoroutineScope(Dispatchers.IO).launch {
 			val firstRef = MessageReference.fromLink(startLink)
+			val secondRef = MessageReference.fromLink(endLink)
 
 			val channel = event.jda
 				.getTextChannelById(firstRef.channelId)
 				?: return@launch
+
+			val messages = fetchMessagesBetween(
+				channel,
+				firstRef.messageId,
+				secondRef.messageId
+			)
+
+			val combinedText = messages
+				.joinToString("\n") { it.contentDisplay }
+				.trim()
+
+			event.hook.sendMessage("```\n$combinedText\n```").queue()
 		}
 
 	}
