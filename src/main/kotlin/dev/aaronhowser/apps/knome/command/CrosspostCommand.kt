@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
+import org.example.dev.aaronhowser.apps.knome.util.AaronServerConstants
 import org.example.dev.aaronhowser.apps.knome.util.ExtensionFunctions.await
 
 object CrosspostCommand {
@@ -19,8 +20,6 @@ object CrosspostCommand {
 	const val COMMAND_NAME = "crosspost"
 	const val START_ARGUMENT = "start"
 	const val END_ARGUMENT = "end"
-
-	const val MODLOG_CHANNEL_ID = 1263962403238973532
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Crosspost messages")
@@ -57,7 +56,7 @@ object CrosspostCommand {
 	}
 
 	private fun postToModlog(jda: JDA, content: String) {
-		val modLogChannel = jda.getTextChannelById(MODLOG_CHANNEL_ID) ?: return
+		val modLogChannel = jda.getTextChannelById(AaronServerConstants.MODLOG_CHANNEL_ID) ?: return
 
 		val embed = EmbedBuilder()
 			.setTitle("Cross-post")
