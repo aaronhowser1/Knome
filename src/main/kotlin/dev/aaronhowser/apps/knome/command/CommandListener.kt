@@ -12,7 +12,6 @@ class CommandListener : ListenerAdapter() {
 	override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
 		when (event.name) {
 			CrosspostCommand.COMMAND_NAME -> {
-				event.deferReply(true).queue()
 				CoroutineScope(Dispatchers.IO).launch {
 					CrosspostCommand.handleCrosspost(event)
 				}

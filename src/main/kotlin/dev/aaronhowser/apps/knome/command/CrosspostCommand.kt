@@ -19,6 +19,8 @@ object CrosspostCommand {
 	}
 
 	fun handleCrosspost(event: SlashCommandInteractionEvent) {
+		event.deferReply(true).complete()
+
 		val startId = event.getOption(START_ARGUMENT)?.asLong
 
 		if (startId == null) {
@@ -35,6 +37,8 @@ object CrosspostCommand {
 			endId = endId,
 			channel = channel
 		)
+
+		event.hook.sendMessage("Done!").queue()
 	}
 
 	data class MessageReference(val guildId: Long, val channelId: Long, val messageId: Long) {
