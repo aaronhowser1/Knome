@@ -8,7 +8,7 @@ object ExtensionFunctions {
 
 	suspend fun <T> RestAction<T>.await(): T = suspendCancellableCoroutine { cont ->
 		queue(
-			{ result -> cont.resume(result) {} },
+			{ result -> cont.resume(result) { throwable, t, context -> } },
 			{ error -> cont.resumeWithException(error) }
 		)
 	}
