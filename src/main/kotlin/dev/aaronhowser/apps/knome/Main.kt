@@ -1,10 +1,20 @@
 package org.example.dev.aaronhowser.apps.knome
 
+import net.dv8tion.jda.api.JDABuilder
+import org.example.dev.aaronhowser.apps.knome.command.CommandListener
+
 object Main {
 
 	@JvmStatic
 	fun main(args: Array<String>) {
-		println("Hello, Kotlin!")
+		println("Knome!!!!!!!!!!!")
+
+		val token = System.getenv("KNOME_TOKEN") ?: error("KNOME_TOKEN environment variable not set")
+
+		JDABuilder
+			.createDefault(token)
+			.addEventListeners(CommandListener())
+			.build()
 	}
 
 }
