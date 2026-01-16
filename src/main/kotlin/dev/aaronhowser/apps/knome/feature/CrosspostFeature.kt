@@ -1,5 +1,11 @@
 package org.example.dev.aaronhowser.apps.knome.feature
 
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
@@ -46,4 +52,42 @@ object CrosspostFeature {
 			.sendMessageEmbeds(embed)
 			.queue()
 	}
+
+	private suspend fun postToTumblr(content: String) {
+		val client = HttpClient(CIO) {
+			install(ContentNegotiation) {
+				json()
+			}
+		}
+
+		val accessToken = "test"
+
+		val tumblrBlogId = System.getenv("TUMBLR_BLOG_IDENTIFIER")
+		val tumblrBlogName = System.getenv("TUMBLR_BLOG_NAME")
+
+		val apiLocation = "https://api.tumblr.com/v2/blog/${tumblrBlogId}/post"
+
+		val body = content
+			.trim()
+			.replace("\"", "\\\"")
+			.let { "\"$it\"" }
+
+		val response = client.post(apiLocation) {
+			header(HttpHeaders.Authorization, "Bearer $accessToken")
+			contentType(ContentType.Application.Json)
+			setBody(
+				"""{
+            "type": "text",
+            "body": $body
+        }"""
+			)
+		}
+
+		client.close()
+
+		if (response.status.value !in 200..299) {
+			throw Exception("Failed to post to Tumblr: ${response.status}")
+		}
+	}
+
 }
