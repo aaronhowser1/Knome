@@ -24,6 +24,10 @@ object CrosspostFeature {
 				endId
 			)
 
+			require(messages.isNotEmpty()) { "No messages found between the given IDs." }
+			val firstAuthorId = messages.first().author.idLong
+			require(messages.all { it.author.idLong == firstAuthorId }) { "All messages must be from the same author." }
+
 			val combinedText = messages
 				.joinToString("\n") { it.contentDisplay }
 				.trim()
