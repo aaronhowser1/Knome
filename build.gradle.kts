@@ -11,7 +11,18 @@ repositories {
 }
 
 dependencies {
-	implementation("net.dv8tion:JDA:${property("jda_version")}")
+	val jdaVersion = property("jda_version")
+	val ktorVersion = property("ktor_version")
+	val serializationVersion = property("kt_serialization_version")
+
+	implementation("net.dv8tion:JDA:$jdaVersion")
+
+	implementation("io.ktor:ktor-client-core:$ktorVersion")
+	implementation("io.ktor:ktor-client-cio:$ktorVersion")
+	implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+	implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
 }
 
 tasks.test {
