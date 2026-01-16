@@ -23,7 +23,7 @@ object QuoteFeature {
 		return if (lastDocument != null) {
 			lastDocument.getInteger(ID_FIELD) + 1
 		} else {
-			1
+			0
 		}
 	}
 

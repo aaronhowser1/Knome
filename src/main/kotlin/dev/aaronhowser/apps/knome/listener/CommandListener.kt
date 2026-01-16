@@ -18,6 +18,12 @@ class CommandListener : ListenerAdapter() {
 					CrosspostCommand.handleCrosspost(event)
 				}
 			}
+
+			QuoteCommand.COMMAND_NAME -> {
+				CoroutineScope(Dispatchers.IO).launch {
+					QuoteCommand.handleQuote(event)
+				}
+			}
 		}
 	}
 
