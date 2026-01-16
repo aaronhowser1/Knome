@@ -31,4 +31,25 @@ sealed class Quote {
 		return embedBuilder.build()
 	}
 
+	companion object {
+		fun List<Quote>.getEmbedDescription(): String {
+			val sb = StringBuilder()
+
+			for (quote in this) {
+				if (quote is QuoteWithId) {
+					sb.append("**#${quote.id}**")
+				}
+
+				sb.append("\n  ${quote.message}")
+				sb.append("\n  \\- *${quote.user}*")
+
+				if (quote != this.last()) {
+					sb.append("\n\n")
+				}
+			}
+
+			return sb.toString()
+		}
+	}
+
 }

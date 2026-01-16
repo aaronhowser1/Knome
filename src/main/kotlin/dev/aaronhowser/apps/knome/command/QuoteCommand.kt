@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
+import org.example.dev.aaronhowser.apps.knome.feature.Quote.Companion.getEmbedDescription
 import org.example.dev.aaronhowser.apps.knome.feature.QuoteFeature
 
 object QuoteCommand {
@@ -140,21 +141,9 @@ object QuoteCommand {
 			return
 		}
 
-		val sb = StringBuilder()
-
-		for (quote in quotes) {
-			sb.append("**#${quote.id}**")
-			sb.append("\n  ${quote.message}")
-			sb.append("\n  \\- *${quote.user}*")
-
-			if (quote != quotes.last()) {
-				sb.append("\n\n")
-			}
-		}
-
 		val embed = EmbedBuilder()
 			.setTitle("Quotes ${quotes.first().id} - ${quotes.last().id}")
-			.setDescription(sb.toString())
+			.setDescription(quotes.getEmbedDescription())
 			.build()
 
 		event.hook.sendMessageEmbeds(embed).queue()
