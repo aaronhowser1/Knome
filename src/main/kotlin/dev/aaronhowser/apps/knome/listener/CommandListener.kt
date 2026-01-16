@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import org.example.dev.aaronhowser.apps.knome.command.CrosspostCommand
+import org.example.dev.aaronhowser.apps.knome.command.QuoteCommand
 
 class CommandListener : ListenerAdapter() {
 
@@ -22,7 +23,10 @@ class CommandListener : ListenerAdapter() {
 
 	override fun onReady(event: ReadyEvent) {
 		event.jda.updateCommands()
-			.addCommands(CrosspostCommand.getCommand())
+			.addCommands(
+				CrosspostCommand.getCommand(),
+				QuoteCommand.getCommand()
+			)
 			.queue()
 	}
 

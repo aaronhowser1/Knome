@@ -14,7 +14,7 @@ object QuoteFeature {
 
 	private const val TABLE_NAME = "quotes"
 	private const val ID_COLUMN = "id"
-	private const val USERNAME_COLUMN = "user"
+	private const val USER_COLUMN = "user"
 	private const val MESSAGE_COLUMN = "message"
 
 	init {
@@ -23,7 +23,7 @@ object QuoteFeature {
 				StringBuilder()
 					.append("CREATE TABLE IF NOT EXISTS $TABLE_NAME (")
 					.append("$ID_COLUMN INTEGER PRIMARY KEY AUTOINCREMENT,")
-					.append("$USERNAME_COLUMN TEXT NOT NULL")
+					.append("$USER_COLUMN TEXT NOT NULL")
 					.append("$MESSAGE_COLUMN TEXT NOT NULL")
 					.append(");")
 					.toString()
@@ -33,7 +33,7 @@ object QuoteFeature {
 
 	fun addQuote(userName: String, message: String) {
 		connection.prepareStatement(
-			"INSERT INTO $TABLE_NAME ($USERNAME_COLUMN, $MESSAGE_COLUMN) VALUES (?, ?);"
+			"INSERT INTO $TABLE_NAME ($USER_COLUMN, $MESSAGE_COLUMN) VALUES (?, ?);"
 		).use { statement ->
 			statement.setString(1, userName)
 			statement.setString(2, message)
@@ -56,12 +56,12 @@ object QuoteFeature {
 
 		if (quoteCount == 0) return null
 
-		return connection.prepareStatement("SELECT $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT 1 OFFSET ?").use { statement ->
+		return connection.prepareStatement("SELECT $USER_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT 1 OFFSET ?").use { statement ->
 			statement.setInt(1, Random.nextInt(quoteCount))
 
 			statement.executeQuery().use { resultSet ->
 				if (resultSet.next()) {
-					val userName = resultSet.getString(USERNAME_COLUMN)
+					val userName = resultSet.getString(USER_COLUMN)
 					val message = resultSet.getString(MESSAGE_COLUMN)
 					Pair(userName, message)
 				} else {
@@ -73,13 +73,13 @@ object QuoteFeature {
 
 	fun getQuote(id: Int): Quote? {
 		return connection.prepareStatement(
-			"SELECT $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME WHERE $ID_COLUMN = ?"
+			"SELECT $USER_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME WHERE $ID_COLUMN = ?"
 		).use { statement ->
 			statement.setInt(1, id)
 
 			statement.executeQuery().use { resultSet ->
 				if (resultSet.next()) {
-					val userName = resultSet.getString(USERNAME_COLUMN)
+					val userName = resultSet.getString(USER_COLUMN)
 					val message = resultSet.getString(MESSAGE_COLUMN)
 					Pair(userName, message)
 				} else {
@@ -106,7 +106,7 @@ object QuoteFeature {
 		val quotes = mutableListOf<QuoteWithId>()
 
 		connection.prepareStatement(
-			"SELECT $ID_COLUMN, $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT ? OFFSET ?"
+			"SELECT $ID_COLUMN, $USER_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT ? OFFSET ?"
 		).use { statement ->
 			statement.setInt(1, amount)
 			statement.setInt(2, startingAt)
@@ -114,7 +114,7 @@ object QuoteFeature {
 			statement.executeQuery().use { resultSet ->
 				while (resultSet.next()) {
 					val id = resultSet.getInt(ID_COLUMN)
-					val userName = resultSet.getString(USERNAME_COLUMN)
+					val userName = resultSet.getString(USER_COLUMN)
 					val message = resultSet.getString(MESSAGE_COLUMN)
 					quotes.add(Triple(id, userName, message))
 				}
