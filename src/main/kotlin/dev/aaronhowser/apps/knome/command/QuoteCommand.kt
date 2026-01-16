@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.command
+package dev.aaronhowser.apps.knome.command
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import org.example.dev.aaronhowser.apps.knome.feature.Quote.Companion.getEmbedDescription
-import org.example.dev.aaronhowser.apps.knome.feature.QuoteFeature
+import dev.aaronhowser.apps.knome.feature.Quote.Companion.getEmbedDescription
+import dev.aaronhowser.apps.knome.feature.QuoteFeature
 
 object QuoteCommand {
 

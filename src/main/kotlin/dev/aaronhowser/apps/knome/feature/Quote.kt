@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.feature
+package dev.aaronhowser.apps.knome.feature
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed

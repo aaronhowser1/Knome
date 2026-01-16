@@ -1,10 +1,10 @@
-package org.example.dev.aaronhowser.apps.knome.command
+package dev.aaronhowser.apps.knome.command
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import org.example.dev.aaronhowser.apps.knome.feature.CrosspostFeature
+import dev.aaronhowser.apps.knome.feature.CrosspostFeature
 
 object CrosspostCommand {
 

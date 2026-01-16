@@ -39,4 +39,8 @@ tasks.register<Jar>("createFatJar") {
 	from({
 		configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
 	})
+
+	manifest {
+		attributes["Main-Class"] = "dev.aaronhowser.apps.knome.Main"
+	}
 }

@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.feature
+package dev.aaronhowser.apps.knome.feature
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters

@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.listener
+package dev.aaronhowser.apps.knome.listener
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -6,8 +6,8 @@ import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
-import org.example.dev.aaronhowser.apps.knome.command.CrosspostCommand
-import org.example.dev.aaronhowser.apps.knome.command.QuoteCommand
+import dev.aaronhowser.apps.knome.command.CrosspostCommand
+import dev.aaronhowser.apps.knome.command.QuoteCommand
 
 class CommandListener : ListenerAdapter() {
 

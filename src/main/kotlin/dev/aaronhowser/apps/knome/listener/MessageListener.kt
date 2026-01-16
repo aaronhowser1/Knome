@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.listener
+package dev.aaronhowser.apps.knome.listener
 
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter

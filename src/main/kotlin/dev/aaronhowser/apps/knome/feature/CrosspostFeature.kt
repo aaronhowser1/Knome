@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.feature
+package dev.aaronhowser.apps.knome.feature
 
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
@@ -9,8 +9,8 @@ import io.ktor.serialization.kotlinx.json.*
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
-import org.example.dev.aaronhowser.apps.knome.util.AaronServerConstants
-import org.example.dev.aaronhowser.apps.knome.util.DiscordUtils
+import dev.aaronhowser.apps.knome.util.AaronServerConstants
+import dev.aaronhowser.apps.knome.util.DiscordUtils
 
 object CrosspostFeature {
 

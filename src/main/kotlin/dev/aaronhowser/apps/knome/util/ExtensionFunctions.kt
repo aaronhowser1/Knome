@@ -1,4 +1,4 @@
-package org.example.dev.aaronhowser.apps.knome.util
+package dev.aaronhowser.apps.knome.util
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.dv8tion.jda.api.requests.RestAction

@@ -1,10 +1,10 @@
-package org.example.dev.aaronhowser.apps.knome.util
+package dev.aaronhowser.apps.knome.util
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
-import org.example.dev.aaronhowser.apps.knome.util.ExtensionFunctions.await
+import dev.aaronhowser.apps.knome.util.ExtensionFunctions.await
 
 object DiscordUtils {
 
