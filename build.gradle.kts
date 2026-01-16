@@ -1,16 +1,17 @@
 plugins {
 	kotlin("jvm") version "2.2.20"
+	application
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "dev.aaronhowser"
+version = "1.0"
 
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	testImplementation(kotlin("test"))
+	implementation("net.dv8tion:JDA:${property("jda_version")}")
 }
 
 tasks.test {
