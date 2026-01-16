@@ -20,34 +20,27 @@ object CrosspostCommand {
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Crosspost messages")
-			.addOption(OptionType.STRING, "start", "First message link", true)
-			.addOption(OptionType.STRING, "end", "Last message link", false)
+			.addOption(OptionType.STRING, "start", "First message ID", true)
+			.addOption(OptionType.STRING, "end", "Last message ID", false)
 	}
 
 	fun handleCrosspost(event: SlashCommandInteractionEvent) {
-		println("Handling crosspost command")
+		val startId = event.getOption(START_ARGUMENT)?.asLong
 
-		val startLink = event.getOption(START_ARGUMENT)?.asString
-
-		if (startLink == null) {
-			event.hook.sendMessage("Start link is required.").queue()
+		if (startId == null) {
+			event.hook.sendMessage("Start id is required.").queue()
 			return
 		}
 
-		val endLink = event.getOption(END_ARGUMENT)?.asString ?: startLink
+		val endId = event.getOption(END_ARGUMENT)?.asLong ?: startId
+		val channel = event.channel
 
 		CoroutineScope(Dispatchers.IO).launch {
-			val firstRef = MessageReference.fromLink(startLink)
-			val secondRef = MessageReference.fromLink(endLink)
-
-			val channel = event.jda
-				.getTextChannelById(firstRef.channelId)
-				?: return@launch
 
 			val messages = fetchMessagesBetween(
 				channel,
-				firstRef.messageId,
-				secondRef.messageId
+				startId,
+				endId
 			)
 
 			val combinedText = messages
