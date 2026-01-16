@@ -1,6 +1,7 @@
 package org.example.dev.aaronhowser.apps.knome
 
 import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.requests.GatewayIntent
 import org.example.dev.aaronhowser.apps.knome.command.CommandListener
 import org.example.dev.aaronhowser.apps.knome.feature.MessageListener
 
@@ -13,7 +14,10 @@ object Main {
 		val token = System.getenv("KNOME_TOKEN") ?: error("KNOME_TOKEN environment variable not set")
 
 		JDABuilder
-			.createDefault(token)
+			.createDefault(
+				token,
+				GatewayIntent.MESSAGE_CONTENT
+			)
 			.addEventListeners(
 				CommandListener(),
 				MessageListener()
