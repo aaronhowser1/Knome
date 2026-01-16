@@ -1,125 +1,94 @@
 package org.example.dev.aaronhowser.apps.knome.feature
 
-import java.sql.Connection
-import java.sql.DriverManager
-import kotlin.random.Random
+import com.mongodb.client.model.Aggregates
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Sorts
 
 typealias Quote = Pair<String, String> // Pair<Username, Message>
 typealias QuoteWithId = Triple<Int, String, String> // Triple<Id, Username, Message>
 
 object QuoteFeature {
 
-	private const val FILE_LOCATION = "quotes.db"
-	private val connection: Connection = DriverManager.getConnection("jdbc:sqlite:$FILE_LOCATION")
+	private const val ID_FIELD = "id"
+	private const val USER_FIELD = "user"
+	private const val MESSAGE_FIELD = "message"
 
-	private const val TABLE_NAME = "quotes"
-	private const val ID_COLUMN = "id"
-	private const val USER_COLUMN = "user"
-	private const val MESSAGE_COLUMN = "message"
+	private fun getNextId(): Int {
+		val lastDocument = QuoteRepository.quotes
+			.find()
+			.sort(Sorts.descending(ID_FIELD))
+			.limit(1)
+			.first()
 
-	init {
-		connection.createStatement().use { statement ->
-			statement.executeUpdate(
-				StringBuilder()
-					.append("CREATE TABLE IF NOT EXISTS $TABLE_NAME (")
-					.append("$ID_COLUMN INTEGER PRIMARY KEY AUTOINCREMENT,")
-					.append("$USER_COLUMN TEXT NOT NULL")
-					.append("$MESSAGE_COLUMN TEXT NOT NULL")
-					.append(");")
-					.toString()
-			)
+		return if (lastDocument != null) {
+			lastDocument.getInteger(ID_FIELD) + 1
+		} else {
+			1
 		}
 	}
 
-	fun addQuote(userName: String, message: String) {
-		connection.prepareStatement(
-			"INSERT INTO $TABLE_NAME ($USER_COLUMN, $MESSAGE_COLUMN) VALUES (?, ?);"
-		).use { statement ->
-			statement.setString(1, userName)
-			statement.setString(2, message)
-			statement.executeUpdate()
-		}
+	fun addQuote(user: String, message: String) {
+		val newId = getNextId()
+		val newQuote = org.bson.Document()
+			.append(ID_FIELD, newId)
+			.append(USER_FIELD, user)
+			.append(MESSAGE_FIELD, message)
+
+		QuoteRepository.quotes.insertOne(newQuote)
 	}
 
 	fun getRandomQuote(): Quote? {
-		val quoteCount = connection.prepareStatement(
-			"SELECT COUNT(*) FROM $TABLE_NAME"
-		).use { countStatement ->
-			countStatement.executeQuery().use { resultSet ->
-				if (resultSet.next()) {
-					resultSet.getInt(1)
-				} else {
-					0
-				}
-			}
-		}
+		val document = QuoteRepository.quotes
+			.aggregate(
+				listOf(Aggregates.sample(1))
+			).firstOrNull() ?: return null
 
-		if (quoteCount == 0) return null
+		val user = document.getString(USER_FIELD)
+		val message = document.getString(MESSAGE_FIELD)
 
-		return connection.prepareStatement("SELECT $USER_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT 1 OFFSET ?").use { statement ->
-			statement.setInt(1, Random.nextInt(quoteCount))
-
-			statement.executeQuery().use { resultSet ->
-				if (resultSet.next()) {
-					val userName = resultSet.getString(USER_COLUMN)
-					val message = resultSet.getString(MESSAGE_COLUMN)
-					Pair(userName, message)
-				} else {
-					null
-				}
-			}
-		}
+		return Quote(user, message)
 	}
 
 	fun getQuote(id: Int): Quote? {
-		return connection.prepareStatement(
-			"SELECT $USER_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME WHERE $ID_COLUMN = ?"
-		).use { statement ->
-			statement.setInt(1, id)
+		val document = QuoteRepository.quotes
+			.find(Filters.eq(ID_FIELD, id))
+			.firstOrNull()
+			?: return null
 
-			statement.executeQuery().use { resultSet ->
-				if (resultSet.next()) {
-					val userName = resultSet.getString(USER_COLUMN)
-					val message = resultSet.getString(MESSAGE_COLUMN)
-					Pair(userName, message)
-				} else {
-					null
-				}
-			}
-		}
+		val userName = document.getString(USER_FIELD)
+		val message = document.getString(MESSAGE_FIELD)
+
+		return Pair(userName, message)
 	}
 
 	fun removeQuote(id: Int): Quote? {
-		val quote = getQuote(id) ?: return null
+		val document = QuoteRepository.quotes
+			.findOneAndDelete(Filters.eq(ID_FIELD, id))
+			?: return null
 
-		val success = connection.prepareStatement(
-			"DELETE FROM $TABLE_NAME WHERE $ID_COLUMN = ?"
-		).use { statement ->
-			statement.setInt(1, id)
-			statement.executeUpdate() > 0
-		}
+		val userName = document.getString(USER_FIELD)
+		val message = document.getString(MESSAGE_FIELD)
 
-		return if (success) quote else null
+		return Pair(userName, message)
 	}
 
-	fun getQuotes(amount: Int = 10, startingAt: Int = 0): List<QuoteWithId> {
+	fun getQuotes(
+		amount: Int = 10,
+		startingAt: Int = 0
+	): List<QuoteWithId> {
 		val quotes = mutableListOf<QuoteWithId>()
 
-		connection.prepareStatement(
-			"SELECT $ID_COLUMN, $USER_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT ? OFFSET ?"
-		).use { statement ->
-			statement.setInt(1, amount)
-			statement.setInt(2, startingAt)
+		QuoteRepository.quotes.find()
+			.sort(Sorts.ascending(ID_FIELD))
+			.skip(startingAt)
+			.limit(amount)
+			.forEach { document ->
+				val id = document.getInteger(ID_FIELD)
+				val userName = document.getString(USER_FIELD)
+				val message = document.getString(MESSAGE_FIELD)
 
-			statement.executeQuery().use { resultSet ->
-				while (resultSet.next()) {
-					val id = resultSet.getInt(ID_COLUMN)
-					val userName = resultSet.getString(USER_COLUMN)
-					val message = resultSet.getString(MESSAGE_COLUMN)
-					quotes.add(Triple(id, userName, message))
-				}
+				quotes.add(Triple(id, userName, message))
 			}
-		}
 
 		return quotes
 	}

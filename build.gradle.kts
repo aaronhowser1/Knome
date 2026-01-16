@@ -23,6 +23,8 @@ dependencies {
 	implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+
+	implementation("org.mongodb:mongodb-driver-sync:5.1.0")
 }
 
 application {
