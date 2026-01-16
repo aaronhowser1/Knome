@@ -1,9 +1,9 @@
 package dev.aaronhowser.apps.knome
 
-import net.dv8tion.jda.api.JDABuilder
-import net.dv8tion.jda.api.requests.GatewayIntent
 import dev.aaronhowser.apps.knome.listener.CommandListener
 import dev.aaronhowser.apps.knome.listener.MessageListener
+import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.requests.GatewayIntent
 
 object Main {
 
