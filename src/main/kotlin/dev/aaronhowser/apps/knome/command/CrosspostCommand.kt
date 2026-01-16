@@ -56,7 +56,7 @@ object CrosspostCommand {
 		}
 	}
 
-	fun postToModlog(jda: JDA, content: String) {
+	private fun postToModlog(jda: JDA, content: String) {
 		val modLogChannel = jda.getTextChannelById(MODLOG_CHANNEL_ID) ?: return
 
 		val embed = EmbedBuilder()
@@ -73,7 +73,7 @@ object CrosspostCommand {
 			.queue()
 	}
 
-	suspend fun fetchMessagesBetween(
+	private suspend fun fetchMessagesBetween(
 		channel: MessageChannel,
 		startMessageId: Long,
 		endMessageId: Long
