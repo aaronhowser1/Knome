@@ -18,7 +18,7 @@ object CrosspostCommand {
 			.addOption(OptionType.STRING, "end", "Last message ID", false)
 	}
 
-	fun handleCrosspost(event: SlashCommandInteractionEvent) {
+	suspend fun handleCrosspost(event: SlashCommandInteractionEvent) {
 		event.deferReply(true).complete()
 
 		val startId = event.getOption(START_ARGUMENT)?.asLong
@@ -31,14 +31,20 @@ object CrosspostCommand {
 		val endId = event.getOption(END_ARGUMENT)?.asLong ?: startId
 		val channel = event.channel
 
-		CrosspostFeature.crosspost(
-			jda = event.jda,
-			startId = startId,
-			endId = endId,
-			channel = channel
-		)
+		try {
+			CrosspostFeature.crosspost(
+				jda = event.jda,
+				startId = startId,
+				endId = endId,
+				channel = channel
+			)
 
-		event.hook.sendMessage("Done!").queue()
+			event.hook.sendMessage("Done!").queue()
+		} catch (e: IllegalArgumentException) {
+			event.hook.sendMessage("Error: ${e.message}").queue()
+		} catch (e: Exception) {
+			event.hook.sendMessage("An unexpected error occurred: ${e.message}").queue()
+		}
 	}
 
 	data class MessageReference(val guildId: Long, val channelId: Long, val messageId: Long) {
