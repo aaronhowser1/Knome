@@ -4,6 +4,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
@@ -17,6 +19,8 @@ object CrosspostCommand {
 	const val COMMAND_NAME = "crosspost"
 	const val START_ARGUMENT = "start"
 	const val END_ARGUMENT = "end"
+
+	const val MODLOG_CHANNEL_ID = 1263962403238973532
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Crosspost messages")
@@ -36,7 +40,6 @@ object CrosspostCommand {
 		val channel = event.channel
 
 		CoroutineScope(Dispatchers.IO).launch {
-
 			val messages = fetchMessagesBetween(
 				channel,
 				startId,
@@ -48,8 +51,26 @@ object CrosspostCommand {
 				.trim()
 
 			event.hook.sendMessage("```\n$combinedText\n```").queue()
-		}
 
+			postToModlog(event.jda, combinedText)
+		}
+	}
+
+	fun postToModlog(jda: JDA, content: String) {
+		val modLogChannel = jda.getTextChannelById(MODLOG_CHANNEL_ID) ?: return
+
+		val embed = EmbedBuilder()
+			.setTitle("Cross-post")
+			.setColor(0x7289DA)
+			.setDescription("Messages reposted from Discord:\n\n$content")
+			.addField("Tumblr", "todo", true)
+			.addField("Bluesky", "todo", true)
+			.setFooter("Knome Bot")
+			.build()
+
+		modLogChannel
+			.sendMessageEmbeds(embed)
+			.queue()
 	}
 
 	suspend fun fetchMessagesBetween(
@@ -57,7 +78,6 @@ object CrosspostCommand {
 		startMessageId: Long,
 		endMessageId: Long
 	): List<Message> {
-
 		return withContext(Dispatchers.IO) {
 			val minId = minOf(startMessageId, endMessageId)
 			val maxId = maxOf(startMessageId, endMessageId)
@@ -80,11 +100,7 @@ object CrosspostCommand {
 				if (batch.isEmpty()) break
 
 				for (msg in batch) {
-					val a = "${msg.id}: ${msg.contentDisplay}"
-					println(a)
-
 					if (msg.idLong < minId) {
-						println("Reached minimum ID ${msg.id} which is below $minId, stopping.")
 						return@withContext collectedMessages.reversed()
 					}
 
