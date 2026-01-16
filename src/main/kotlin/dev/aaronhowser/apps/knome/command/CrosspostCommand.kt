@@ -25,6 +25,8 @@ object CrosspostCommand {
 	}
 
 	fun handleCrosspost(event: SlashCommandInteractionEvent) {
+		println("Handling crosspost command")
+
 		val startLink = event.getOption(START_ARGUMENT)?.asString
 		val endLink = event.getOption(END_ARGUMENT)?.asString ?: startLink
 
@@ -37,8 +39,6 @@ object CrosspostCommand {
 			event.hook.sendMessage("End link is required.").queue()
 			return
 		}
-
-		event.deferReply(true).queue()
 
 		CoroutineScope(Dispatchers.IO).launch {
 			val firstRef = MessageReference.fromLink(startLink)
@@ -85,6 +85,9 @@ object CrosspostCommand {
 				if (batch.isEmpty()) break
 
 				for (msg in batch) {
+					val a = "${msg.id}: ${msg.contentDisplay}"
+					println(a)
+
 					if (msg.idLong < minId) {
 						return@withContext collectedMessages.reversed()
 					}
