@@ -2,8 +2,8 @@ package org.example.dev.aaronhowser.apps.knome
 
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.requests.GatewayIntent
-import org.example.dev.aaronhowser.apps.knome.command.CommandListener
-import org.example.dev.aaronhowser.apps.knome.feature.MessageListener
+import org.example.dev.aaronhowser.apps.knome.listener.CommandListener
+import org.example.dev.aaronhowser.apps.knome.listener.MessageListener
 
 object Main {
 
