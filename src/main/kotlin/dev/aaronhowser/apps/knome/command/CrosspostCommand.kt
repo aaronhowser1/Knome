@@ -1,5 +1,8 @@
 package org.example.dev.aaronhowser.apps.knome.command
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
@@ -26,6 +29,32 @@ object CrosspostCommand {
 			return
 		}
 
+		event.deferReply(true).queue()
+
+		CoroutineScope(Dispatchers.IO).launch {
+			val firstRef = MessageReference.fromLink(startLink)
+
+			val channel = event.jda
+				.getTextChannelById(firstRef.channelId)
+				?: return@launch
+		}
+
+	}
+
+	data class MessageReference(val guildId: Long, val channelId: Long, val messageId: Long) {
+		companion object {
+			fun fromLink(link: String): MessageReference {
+				val parts = link
+					.removePrefix("https://discord.com/channels/")
+					.split("/")
+
+				return MessageReference(
+					guildId = parts[0].toLong(),
+					channelId = parts[1].toLong(),
+					messageId = parts[2].toLong()
+				)
+			}
+		}
 	}
 
 }
