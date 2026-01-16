@@ -59,7 +59,7 @@ object QuoteFeature {
 		val userName = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return Quote.QuoteWithoutId(userName, message)
+		return Quote.QuoteWithId(id, userName, message)
 	}
 
 	fun removeQuote(id: Int): Quote? {

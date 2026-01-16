@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
+import org.example.dev.aaronhowser.apps.knome.feature.Quote
 import org.example.dev.aaronhowser.apps.knome.feature.QuoteFeature
 
 object QuoteCommand {
@@ -115,17 +116,7 @@ object QuoteCommand {
 			return
 		}
 
-		val sb = StringBuilder()
-		for (index in quotes.withIndex()) {
-			val (id, user, quote) = index.value
-			sb.append("$id: \"$quote\" - $user")
-
-			if (index.index < quotes.size - 1) {
-				sb.append("\n")
-			}
-		}
-
-		event.hook.sendMessage(sb.toString()).queue()
+		event.hook.sendMessageEmbeds(quotes.map(Quote::getEmbed)).queue()
 	}
 
 }
