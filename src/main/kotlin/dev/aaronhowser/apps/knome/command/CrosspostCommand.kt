@@ -89,6 +89,7 @@ object CrosspostCommand {
 					println(a)
 
 					if (msg.idLong < minId) {
+						println("Reached minimum ID ${msg.id} which is below $minId, stopping.")
 						return@withContext collectedMessages.reversed()
 					}
 
