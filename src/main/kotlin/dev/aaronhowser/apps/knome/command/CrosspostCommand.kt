@@ -1,10 +1,12 @@
 package dev.aaronhowser.apps.knome.command
 
+import dev.aaronhowser.apps.knome.feature.CrosspostFeature
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import dev.aaronhowser.apps.knome.feature.CrosspostFeature
 
 object CrosspostCommand {
 
@@ -16,6 +18,7 @@ object CrosspostCommand {
 		return Commands.slash(COMMAND_NAME, "Crosspost messages")
 			.addOption(OptionType.STRING, "start", "First message ID", true)
 			.addOption(OptionType.STRING, "end", "Last message ID", false)
+			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
 
 	suspend fun handleCrosspost(event: SlashCommandInteractionEvent) {
