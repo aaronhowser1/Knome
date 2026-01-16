@@ -28,3 +28,13 @@ dependencies {
 application {
 	mainClass.set("dev.aaronhowser.apps.knome.Main")
 }
+
+tasks.register<Jar>("createFatJar") {
+	archiveClassifier.set("all")
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from(sourceSets.main.get().output)
+	dependsOn(configurations.runtimeClasspath)
+	from({
+		configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+	})
+}
