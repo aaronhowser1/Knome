@@ -3,6 +3,7 @@ package org.example.dev.aaronhowser.apps.knome.feature
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
+import org.bson.Document
 
 typealias Quote = Pair<String, String> // Pair<Username, Message>
 typealias QuoteWithId = Triple<Int, String, String> // Triple<Id, Username, Message>
@@ -14,11 +15,15 @@ object QuoteFeature {
 	private const val MESSAGE_FIELD = "message"
 
 	private fun getNextId(): Int {
+		println("Getting next quote ID...")
+
 		val lastDocument = QuoteRepository.quotes
 			.find()
 			.sort(Sorts.descending(ID_FIELD))
 			.limit(1)
 			.first()
+
+		println("Last document: $lastDocument")
 
 		return if (lastDocument != null) {
 			lastDocument.getInteger(ID_FIELD) + 1
@@ -29,7 +34,7 @@ object QuoteFeature {
 
 	fun addQuote(user: String, message: String) {
 		val newId = getNextId()
-		val newQuote = org.bson.Document()
+		val newQuote = Document()
 			.append(ID_FIELD, newId)
 			.append(USER_FIELD, user)
 			.append(MESSAGE_FIELD, message)
