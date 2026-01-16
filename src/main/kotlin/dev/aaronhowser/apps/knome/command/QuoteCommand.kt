@@ -24,6 +24,7 @@ object QuoteCommand {
 	const val STARTING_AT_ARGUMENT = "starting_at"
 
 	const val DELETE_SUBCOMMAND = "delete"
+	const val GET_RANDOM_SUBCOMMAND = "random"
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Quotes!")
@@ -37,20 +38,21 @@ object QuoteCommand {
 					.addOption(OptionType.INTEGER, ID_ARGUMENT, "Quote id", true),
 				SubcommandData(LIST_SUBCOMMAND, "List quotes")
 					.addOption(OptionType.INTEGER, AMOUNT_SUBCOMMAND, "Number of quotes to list", false)
-					.addOption(OptionType.INTEGER, STARTING_AT_ARGUMENT, "Starting quote ID", false)
+					.addOption(OptionType.INTEGER, STARTING_AT_ARGUMENT, "Starting quote ID", false),
+				SubcommandData(GET_RANDOM_SUBCOMMAND, "Get a random quote")
 			)
 	}
 
 	suspend fun handleQuote(event: SlashCommandInteractionEvent) {
 		event.deferReply(false).complete()
 
-		val subcommand = event.subcommandName
-
-		when (subcommand) {
+		when (val subcommand = event.subcommandName) {
 			ADD_SUBCOMMAND -> handleAddQuote(event)
 			GET_SUBCOMMAND -> handleGetQuote(event)
 			DELETE_SUBCOMMAND -> handleDeleteQuote(event)
 			LIST_SUBCOMMAND -> handleListQuotes(event)
+			GET_RANDOM_SUBCOMMAND -> handleGetRandomQuote(event)
+			else -> event.hook.sendMessage("Unknown subcommand: $subcommand").queue()
 		}
 	}
 
@@ -88,6 +90,16 @@ object QuoteCommand {
 		val quote = QuoteFeature.getQuote(id)
 		if (quote == null) {
 			event.hook.sendMessage("Quote with ID $id not found.").queue()
+			return
+		}
+
+		event.hook.sendMessageEmbeds(quote.getEmbed()).queue()
+	}
+
+	private fun handleGetRandomQuote(event: SlashCommandInteractionEvent) {
+		val quote = QuoteFeature.getRandomQuote()
+		if (quote == null) {
+			event.hook.sendMessage("No quotes found.").queue()
 			return
 		}
 
