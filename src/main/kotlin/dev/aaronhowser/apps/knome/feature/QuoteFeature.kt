@@ -12,17 +12,23 @@ object QuoteFeature {
 	private const val MESSAGE_FIELD = "message"
 
 	private fun getNextId(): Int {
+		val maxId = getMaxId()
+
+		return if (maxId != null) {
+			maxId + 1
+		} else {
+			0
+		}
+	}
+
+	fun getMaxId(): Int? {
 		val lastDocument = QuoteRepository.quotes
 			.find()
 			.sort(Sorts.descending(ID_FIELD))
 			.limit(1)
 			.first()
 
-		return if (lastDocument != null) {
-			lastDocument.getInteger(ID_FIELD) + 1
-		} else {
-			0
-		}
+		return lastDocument?.getInteger(ID_FIELD)
 	}
 
 	fun addQuote(user: String, message: String): Quote.QuoteWithId {

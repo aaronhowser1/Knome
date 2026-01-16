@@ -141,8 +141,10 @@ object QuoteCommand {
 			return
 		}
 
+		val amountQuotes = QuoteFeature.getMaxId() ?: 0
+
 		val embed = EmbedBuilder()
-			.setTitle("Quotes ${quotes.first().id} - ${quotes.last().id}")
+			.setTitle("Quotes ${quotes.first().id} - ${quotes.last().id} / $amountQuotes")
 			.setDescription(quotes.getEmbedDescription())
 			.build()
 
