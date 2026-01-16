@@ -28,17 +28,13 @@ object CrosspostCommand {
 		println("Handling crosspost command")
 
 		val startLink = event.getOption(START_ARGUMENT)?.asString
-		val endLink = event.getOption(END_ARGUMENT)?.asString ?: startLink
 
 		if (startLink == null) {
 			event.hook.sendMessage("Start link is required.").queue()
 			return
 		}
 
-		if (endLink == null) {
-			event.hook.sendMessage("End link is required.").queue()
-			return
-		}
+		val endLink = event.getOption(END_ARGUMENT)?.asString ?: startLink
 
 		CoroutineScope(Dispatchers.IO).launch {
 			val firstRef = MessageReference.fromLink(startLink)
