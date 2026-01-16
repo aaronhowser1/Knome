@@ -41,7 +41,7 @@ object QuoteCommand {
 	}
 
 	suspend fun handleQuote(event: SlashCommandInteractionEvent) {
-		event.deferReply(true).complete()
+		event.deferReply(false).complete()
 
 		val subcommand = event.subcommandName
 
@@ -62,12 +62,12 @@ object QuoteCommand {
 			return
 		}
 
-		QuoteFeature.addQuote(
+		val quote = QuoteFeature.addQuote(
 			user = quotee,
 			message = message
 		)
 
-		event.hook.sendMessage("Quote added!").queue()
+		event.hook.sendMessage("Added quote #${quote.id} by ${quote.user}: \"${quote.message}\"").queue()
 	}
 
 	private fun handleGetQuote(event: SlashCommandInteractionEvent) {
@@ -84,7 +84,7 @@ object QuoteCommand {
 			return
 		}
 
-		event.hook.sendMessage("Quote #$id by ${quote.first}: \"${quote.second}\"").queue()
+		event.hook.sendMessage("Quote #$id by ${quote.user}: \"${quote.message}\"").queue()
 	}
 
 	private fun handleDeleteQuote(event: SlashCommandInteractionEvent) {
@@ -101,7 +101,7 @@ object QuoteCommand {
 			return
 		}
 
-		event.hook.sendMessage("Deleted quote #$id by ${deletedQuote.first}: \"${deletedQuote.second}\"").queue()
+		event.hook.sendMessage("Deleted quote #$id by ${deletedQuote.user}: \"${deletedQuote.message}\"").queue()
 	}
 
 	private fun handleListQuotes(event: SlashCommandInteractionEvent) {

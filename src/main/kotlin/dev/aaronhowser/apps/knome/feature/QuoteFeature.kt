@@ -5,9 +5,6 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
 import org.bson.Document
 
-typealias Quote = Pair<String, String> // Pair<Username, Message>
-typealias QuoteWithId = Triple<Int, String, String> // Triple<Id, Username, Message>
-
 object QuoteFeature {
 
 	private const val ID_FIELD = "id"
@@ -15,15 +12,11 @@ object QuoteFeature {
 	private const val MESSAGE_FIELD = "message"
 
 	private fun getNextId(): Int {
-		println("Getting next quote ID...")
-
 		val lastDocument = QuoteRepository.quotes
 			.find()
 			.sort(Sorts.descending(ID_FIELD))
 			.limit(1)
 			.first()
-
-		println("Last document: $lastDocument")
 
 		return if (lastDocument != null) {
 			lastDocument.getInteger(ID_FIELD) + 1
@@ -32,7 +25,7 @@ object QuoteFeature {
 		}
 	}
 
-	fun addQuote(user: String, message: String) {
+	fun addQuote(user: String, message: String): QuoteWithId {
 		val newId = getNextId()
 		val newQuote = Document()
 			.append(ID_FIELD, newId)
@@ -40,18 +33,21 @@ object QuoteFeature {
 			.append(MESSAGE_FIELD, message)
 
 		QuoteRepository.quotes.insertOne(newQuote)
+
+		return QuoteWithId(newId, user, message)
 	}
 
-	fun getRandomQuote(): Quote? {
+	fun getRandomQuote(): QuoteWithId? {
 		val document = QuoteRepository.quotes
 			.aggregate(
 				listOf(Aggregates.sample(1))
 			).firstOrNull() ?: return null
 
+		val id = document.getInteger(ID_FIELD)
 		val user = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return Quote(user, message)
+		return QuoteWithId(id, user, message)
 	}
 
 	fun getQuote(id: Int): Quote? {
@@ -63,7 +59,7 @@ object QuoteFeature {
 		val userName = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return Pair(userName, message)
+		return Quote(userName, message)
 	}
 
 	fun removeQuote(id: Int): Quote? {
@@ -74,7 +70,7 @@ object QuoteFeature {
 		val userName = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return Pair(userName, message)
+		return Quote(userName, message)
 	}
 
 	fun getQuotes(
@@ -92,7 +88,7 @@ object QuoteFeature {
 				val userName = document.getString(USER_FIELD)
 				val message = document.getString(MESSAGE_FIELD)
 
-				quotes.add(Triple(id, userName, message))
+				quotes.add(QuoteWithId(id, userName, message))
 			}
 
 		return quotes
