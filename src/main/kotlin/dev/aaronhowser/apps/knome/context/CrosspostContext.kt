@@ -24,6 +24,7 @@ object CrosspostContext {
 
 		event.hook
 			.sendMessage("Please provide the end message ID.")
+			.queue()
 
 	}
 

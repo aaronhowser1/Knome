@@ -4,12 +4,13 @@ import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionE
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
+// FIXME: Isn't showing up when right-clicking messages
 class ContextListener : ListenerAdapter() {
 
 	override fun onMessageContextInteraction(event: MessageContextInteractionEvent) {
 		when (event.name) {
 			CrosspostContext.COMMAND_NAME -> {
-				event.reply("test")
+				CrosspostContext.handleContextCrosspost(event)
 			}
 		}
 	}
