@@ -76,6 +76,12 @@ object CrosspostCommand {
 			val collectedMessages = mutableListOf<Message>()
 			var lastMessageId = maxId
 
+			val lastMessage = channel
+				.retrieveMessageById(maxId)
+				.await()
+
+			collectedMessages.add(lastMessage)
+
 			while (true) {
 				val batch = channel
 					.getHistoryBefore(lastMessageId, 100)
