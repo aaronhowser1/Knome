@@ -68,7 +68,7 @@ object QuoteCommand {
 			message = message
 		)
 
-		event.hook.sendMessage("Added quote #${quote.id} by ${quote.user}: \"${quote.message}\"").queue()
+		event.hook.sendMessage("Added quote #${quote.id} by `${quote.user}`: \"`${quote.message}`\"").queue()
 	}
 
 	private fun handleGetQuote(event: SlashCommandInteractionEvent) {
@@ -102,7 +102,7 @@ object QuoteCommand {
 			return
 		}
 
-		event.hook.sendMessage("Deleted quote #$id by ${deletedQuote.user}: \"${deletedQuote.message}\"").queue()
+		event.hook.sendMessage("Deleted quote #$id by `${deletedQuote.user}`: \"`${deletedQuote.message}`\"").queue()
 	}
 
 	private fun handleListQuotes(event: SlashCommandInteractionEvent) {
