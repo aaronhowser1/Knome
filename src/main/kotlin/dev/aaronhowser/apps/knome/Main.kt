@@ -1,5 +1,4 @@
-package org.example
-
+package org.example.dev.aaronhowser.apps.knome
 
 object Main {
 

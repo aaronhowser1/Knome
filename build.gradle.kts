@@ -25,9 +25,6 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
 }
 
-tasks.test {
-	useJUnitPlatform()
-}
-kotlin {
-	jvmToolchain(21)
+application {
+	mainClass.set("dev.aaronhowser.apps.knome.Main")
 }
