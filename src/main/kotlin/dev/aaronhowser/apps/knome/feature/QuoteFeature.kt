@@ -9,7 +9,8 @@ typealias QuoteWithId = Triple<Int, String, String> // Triple<Id, Username, Mess
 
 object QuoteFeature {
 
-	private val connection: Connection = DriverManager.getConnection("jdbc:sqlite:quotes.db")
+	private const val FILE_LOCATION = "quotes.db"
+	private val connection: Connection = DriverManager.getConnection("jdbc:sqlite:$FILE_LOCATION")
 
 	private const val TABLE_NAME = "quotes"
 	private const val ID_COLUMN = "id"
@@ -99,6 +100,28 @@ object QuoteFeature {
 		}
 
 		return if (success) quote else null
+	}
+
+	fun getQuotes(amount: Int = 10, startingAt: Int = 0): List<QuoteWithId> {
+		val quotes = mutableListOf<QuoteWithId>()
+
+		connection.prepareStatement(
+			"SELECT $ID_COLUMN, $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT ? OFFSET ?"
+		).use { statement ->
+			statement.setInt(1, amount)
+			statement.setInt(2, startingAt)
+
+			statement.executeQuery().use { resultSet ->
+				while (resultSet.next()) {
+					val id = resultSet.getInt(ID_COLUMN)
+					val userName = resultSet.getString(USERNAME_COLUMN)
+					val message = resultSet.getString(MESSAGE_COLUMN)
+					quotes.add(Triple(id, userName, message))
+				}
+			}
+		}
+
+		return quotes
 	}
 
 }
