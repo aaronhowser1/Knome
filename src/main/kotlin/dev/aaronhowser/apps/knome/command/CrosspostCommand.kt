@@ -53,7 +53,7 @@ object CrosspostCommand {
 	}
 
 	private fun postToModlog(jda: JDA, content: String) {
-		val modLogChannel = jda.getTextChannelById(AaronServerConstants.MODLOG_CHANNEL_ID) ?: return
+		val modLogChannel = AaronServerConstants.getModlog(jda)
 
 		val embed = EmbedBuilder()
 			.setTitle("Cross-post")
