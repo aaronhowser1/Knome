@@ -70,4 +70,35 @@ object QuoteFeature {
 		}
 	}
 
+	fun getQuote(id: Int): Quote? {
+		return connection.prepareStatement(
+			"SELECT $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME WHERE $ID_COLUMN = ?"
+		).use { statement ->
+			statement.setInt(1, id)
+
+			statement.executeQuery().use { resultSet ->
+				if (resultSet.next()) {
+					val userName = resultSet.getString(USERNAME_COLUMN)
+					val message = resultSet.getString(MESSAGE_COLUMN)
+					Pair(userName, message)
+				} else {
+					null
+				}
+			}
+		}
+	}
+
+	fun removeQuote(id: Int): Quote? {
+		val quote = getQuote(id) ?: return null
+
+		val success = connection.prepareStatement(
+			"DELETE FROM $TABLE_NAME WHERE $ID_COLUMN = ?"
+		).use { statement ->
+			statement.setInt(1, id)
+			statement.executeUpdate() > 0
+		}
+
+		return if (success) quote else null
+	}
+
 }
