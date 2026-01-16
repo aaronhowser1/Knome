@@ -68,7 +68,13 @@ object QuoteCommand {
 			message = message
 		)
 
-		event.hook.sendMessage("Added quote #${quote.id} by `${quote.user}`: \"`${quote.message}`\"").queue()
+		val embed = EmbedBuilder()
+			.setTitle("Added Quote #${quote.id}")
+			.setDescription(quote.message)
+			.setFooter("- ${quote.user}")
+			.build()
+
+		event.hook.sendMessageEmbeds(embed).queue()
 	}
 
 	private fun handleGetQuote(event: SlashCommandInteractionEvent) {
@@ -102,7 +108,13 @@ object QuoteCommand {
 			return
 		}
 
-		event.hook.sendMessage("Deleted quote #$id by `${deletedQuote.user}`: \"`${deletedQuote.message}`\"").queue()
+		val embed = EmbedBuilder()
+			.setTitle("Deleted Quote #$id")
+			.setDescription(deletedQuote.message)
+			.setFooter("- ${deletedQuote.user}")
+			.build()
+
+		event.hook.sendMessageEmbeds(embed).queue()
 	}
 
 	private fun handleListQuotes(event: SlashCommandInteractionEvent) {
