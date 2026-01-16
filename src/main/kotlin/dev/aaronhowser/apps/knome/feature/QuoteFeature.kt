@@ -41,34 +41,30 @@ object QuoteFeature {
 	}
 
 	fun getRandomQuote(): Quote? {
-		connection.prepareStatement(
+		val quoteCount = connection.prepareStatement(
 			"SELECT COUNT(*) FROM $TABLE_NAME"
 		).use { countStatement ->
-			val totalQuotes = countStatement.executeQuery().use { resultSet ->
+			countStatement.executeQuery().use { resultSet ->
 				if (resultSet.next()) {
 					resultSet.getInt(1)
 				} else {
 					0
 				}
 			}
+		}
 
-			if (totalQuotes == 0) return null
+		if (quoteCount == 0) return null
 
-			val randomOffset = Random.nextInt(totalQuotes)
+		return connection.prepareStatement("SELECT $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT 1 OFFSET ?").use { statement ->
+			statement.setInt(1, Random.nextInt(quoteCount))
 
-			connection.prepareStatement(
-				"SELECT $USERNAME_COLUMN, $MESSAGE_COLUMN FROM $TABLE_NAME LIMIT 1 OFFSET ?"
-			).use { quoteStatement ->
-				quoteStatement.setInt(1, randomOffset)
-
-				quoteStatement.executeQuery().use { resultSet ->
-					return if (resultSet.next()) {
-						val userName = resultSet.getString(USERNAME_COLUMN)
-						val message = resultSet.getString(MESSAGE_COLUMN)
-						Pair(userName, message)
-					} else {
-						null
-					}
+			statement.executeQuery().use { resultSet ->
+				if (resultSet.next()) {
+					val userName = resultSet.getString(USERNAME_COLUMN)
+					val message = resultSet.getString(MESSAGE_COLUMN)
+					Pair(userName, message)
+				} else {
+					null
 				}
 			}
 		}
