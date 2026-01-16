@@ -25,7 +25,7 @@ object QuoteFeature {
 		}
 	}
 
-	fun addQuote(user: String, message: String): QuoteWithId {
+	fun addQuote(user: String, message: String): Quote.QuoteWithId {
 		val newId = getNextId()
 		val newQuote = Document()
 			.append(ID_FIELD, newId)
@@ -34,10 +34,10 @@ object QuoteFeature {
 
 		QuoteRepository.quotes.insertOne(newQuote)
 
-		return QuoteWithId(newId, user, message)
+		return Quote.QuoteWithId(newId, user, message)
 	}
 
-	fun getRandomQuote(): QuoteWithId? {
+	fun getRandomQuote(): Quote.QuoteWithId? {
 		val document = QuoteRepository.quotes
 			.aggregate(
 				listOf(Aggregates.sample(1))
@@ -47,7 +47,7 @@ object QuoteFeature {
 		val user = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return QuoteWithId(id, user, message)
+		return Quote.QuoteWithId(id, user, message)
 	}
 
 	fun getQuote(id: Int): Quote? {
@@ -59,7 +59,7 @@ object QuoteFeature {
 		val userName = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return Quote(userName, message)
+		return Quote.QuoteWithoutId(userName, message)
 	}
 
 	fun removeQuote(id: Int): Quote? {
@@ -70,14 +70,14 @@ object QuoteFeature {
 		val userName = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
 
-		return Quote(userName, message)
+		return Quote.QuoteWithoutId(userName, message)
 	}
 
 	fun getQuotes(
 		amount: Int = 10,
 		startingAt: Int = 0
-	): List<QuoteWithId> {
-		val quotes = mutableListOf<QuoteWithId>()
+	): List<Quote.QuoteWithId> {
+		val quotes = mutableListOf<Quote.QuoteWithId>()
 
 		QuoteRepository.quotes.find()
 			.sort(Sorts.ascending(ID_FIELD))
@@ -88,7 +88,7 @@ object QuoteFeature {
 				val userName = document.getString(USER_FIELD)
 				val message = document.getString(MESSAGE_FIELD)
 
-				quotes.add(QuoteWithId(id, userName, message))
+				quotes.add(Quote.QuoteWithId(id, userName, message))
 			}
 
 		return quotes

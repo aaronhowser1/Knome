@@ -24,6 +24,3 @@ object QuoteRepository {
 	val quotes: MongoCollection<Document> = database.getCollection("quotes")
 
 }
-
-data class Quote(val user: String, val message: String)
-data class QuoteWithId(val id: Int, val user: String, val message: String)

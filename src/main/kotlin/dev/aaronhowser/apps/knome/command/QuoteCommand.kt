@@ -84,7 +84,7 @@ object QuoteCommand {
 			return
 		}
 
-		event.hook.sendMessage("Quote #$id by ${quote.user}: \"${quote.message}\"").queue()
+		event.hook.sendMessageEmbeds(quote.getEmbed()).queue()
 	}
 
 	private fun handleDeleteQuote(event: SlashCommandInteractionEvent) {
