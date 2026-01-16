@@ -1,16 +1,10 @@
 package org.example.dev.aaronhowser.apps.knome.command
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import net.dv8tion.jda.api.EmbedBuilder
-import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
-import org.example.dev.aaronhowser.apps.knome.util.AaronServerConstants
-import org.example.dev.aaronhowser.apps.knome.util.DiscordUtils
+import org.example.dev.aaronhowser.apps.knome.feature.CrosspostFeature
 
 object CrosspostCommand {
 
@@ -35,38 +29,12 @@ object CrosspostCommand {
 		val endId = event.getOption(END_ARGUMENT)?.asLong ?: startId
 		val channel = event.channel
 
-		CoroutineScope(Dispatchers.IO).launch {
-			val messages = DiscordUtils.fetchMessagesBetween(
-				channel,
-				startId,
-				endId
-			)
-
-			val combinedText = messages
-				.joinToString("\n") { it.contentDisplay }
-				.trim()
-
-			event.hook.sendMessage("```\n$combinedText\n```").queue()
-
-			postToModlog(event.jda, combinedText)
-		}
-	}
-
-	private fun postToModlog(jda: JDA, content: String) {
-		val modLogChannel = AaronServerConstants.getModlog(jda)
-
-		val embed = EmbedBuilder()
-			.setTitle("Cross-post")
-			.setColor(0x7289DA)
-			.setDescription("Messages reposted from Discord:\n\n$content")
-			.addField("Tumblr", "todo", true)
-			.addField("Bluesky", "todo", true)
-			.setFooter("Knome Bot")
-			.build()
-
-		modLogChannel
-			.sendMessageEmbeds(embed)
-			.queue()
+		CrosspostFeature.crosspost(
+			jda = event.jda,
+			startId = startId,
+			endId = endId,
+			channel = channel
+		)
 	}
 
 	data class MessageReference(val guildId: Long, val channelId: Long, val messageId: Long) {
