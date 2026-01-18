@@ -88,4 +88,8 @@ object CrosspostFeature {
 		}
 	}
 
+	private suspend fun postToBluesky(content: String) {
+
+	}
+
 }
