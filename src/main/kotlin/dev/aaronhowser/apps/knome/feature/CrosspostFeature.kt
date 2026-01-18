@@ -1,5 +1,6 @@
 package dev.aaronhowser.apps.knome.feature
 
+import dev.aaronhowser.apps.knome.EnvironmentKeys
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -62,10 +63,7 @@ object CrosspostFeature {
 
 		val accessToken = "test"
 
-		val tumblrBlogId = System.getenv("TUMBLR_BLOG_IDENTIFIER")
-		val tumblrBlogName = System.getenv("TUMBLR_BLOG_NAME")
-
-		val apiLocation = "https://api.tumblr.com/v2/blog/${tumblrBlogId}/post"
+		val apiLocation = "https://api.tumblr.com/v2/blog/${EnvironmentKeys.TUMBLR_ID}/post"
 
 		val body = content
 			.trim()
