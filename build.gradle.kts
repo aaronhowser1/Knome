@@ -28,7 +28,7 @@ dependencies {
 }
 
 application {
-	mainClass.set("dev.aaronhowser.apps.knome.Main")
+	mainClass.set("dev.aaronhowser.apps.knome.KnomeBot")
 }
 
 tasks.register<Jar>("createFatJar") {
@@ -41,6 +41,6 @@ tasks.register<Jar>("createFatJar") {
 	})
 
 	manifest {
-		attributes["Main-Class"] = "dev.aaronhowser.apps.knome.Main"
+		attributes["Main-Class"] = "dev.aaronhowser.apps.knome.KnomeBot"
 	}
 }

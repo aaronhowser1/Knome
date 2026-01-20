@@ -1,5 +1,6 @@
 package dev.aaronhowser.apps.knome.command
 
+import dev.aaronhowser.apps.knome.KnomeBot
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
@@ -23,6 +24,7 @@ object StopCommand {
 		val shouldRestart = event.getOption(RESTART_AFTER_ARGUMENT)?.asBoolean ?: false
 
 		event.deferReply(true).queue { hook ->
+			KnomeBot.LOGGER.info("Stopping bot... (will restart: $shouldRestart)")
 			hook.sendMessage("Stopping bot...${if (shouldRestart) " (will restart)" else ""}").queue {
 				Thread.sleep(200)
 				exitProcess(if (shouldRestart) 2 else 99) // 2 = restart, 99 = kill
