@@ -4,6 +4,7 @@ import dev.aaronhowser.apps.knome.feature.QuoteRepository
 import dev.aaronhowser.apps.knome.listener.CommandListener
 import dev.aaronhowser.apps.knome.listener.MessageListener
 import dev.aaronhowser.apps.knome.util.AaronServerConstants
+import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.requests.GatewayIntent
 import java.util.logging.Logger
@@ -39,7 +40,9 @@ object KnomeBot {
 		val bots = jda.getTextChannelById(AaronServerConstants.BOTS_CHANNEL_ID)
 		if (bots != null) {
 			bots.sendMessage("Knome is starting up...").queue()
-			if (!QuoteRepository.isOnline()) {
+
+			val quotesOnline = runBlocking { QuoteRepository.isOnline() }
+			if (!quotesOnline) {
 				bots.sendMessage("⚠️ Warning: Quote database is offline! Some features may not work.").queue()
 			}
 		}

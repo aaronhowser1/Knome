@@ -6,6 +6,8 @@ import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.bson.Document
 import org.bson.UuidRepresentation
 
@@ -23,12 +25,14 @@ object QuoteRepository {
 
 	val quotes: MongoCollection<Document> = database.getCollection("quotes")
 
-	fun isOnline(): Boolean {
-		return try {
-			database.runCommand(Document("ping", 1))
-			true
-		} catch (e: Exception) {
-			false
+	suspend fun isOnline(): Boolean {
+		return withContext(Dispatchers.IO) {
+			try {
+				database.runCommand(Document("ping", 1))
+				true
+			} catch (e: Exception) {
+				false
+			}
 		}
 	}
 
