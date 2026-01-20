@@ -40,6 +40,12 @@ class MessageListener : ListenerAdapter() {
 				message.reply(affirmations.random()).queue()
 			}
 		}
+
+		if (channel.idLong == AaronServerConstants.OFF_TOPIC_CHANNEL_ID) {
+			if (Random.nextInt(300) == 0) {
+				event.channel.sendTyping()
+			}
+		}
 	}
 
 }
