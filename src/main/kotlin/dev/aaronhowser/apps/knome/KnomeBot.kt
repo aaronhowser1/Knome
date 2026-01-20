@@ -44,6 +44,8 @@ object KnomeBot {
 			val quotesOnline = runBlocking { QuoteRepository.isOnline() }
 			if (!quotesOnline) {
 				bots.sendMessage("⚠️ Warning: Quote database is offline! Some features may not work.").queue()
+			} else {
+				bots.sendMessage("✅ Quote database is online.").queue()
 			}
 		}
 	}
