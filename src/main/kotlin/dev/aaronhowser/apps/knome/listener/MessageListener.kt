@@ -22,6 +22,21 @@ class MessageListener : ListenerAdapter() {
 				event.message.reply(insults.random()).queue()
 			}
 		}
+
+		if (event.author.idLong == AaronServerConstants.AARON_MEMBER_ID) {
+
+			if (event.channel.idLong == AaronServerConstants.PHILOSOPHY_CHANNEL_ID) return
+			if (AaronServerConstants.channelIsInGroup(event.guild, event.channel.idLong, AaronServerConstants.MOD_UPDATES_GROUP_ID)) return
+			if (AaronServerConstants.channelIsInGroup(event.guild, event.channel.idLong, AaronServerConstants.SERVER_GROUP_ID)) return
+
+			if (Random.nextInt(200) == 0) {
+				val affirmations = listOf(
+					"so true", "real", "facts"
+				)
+
+				event.message.reply(affirmations.random()).queue()
+			}
+		}
 	}
 
 }
