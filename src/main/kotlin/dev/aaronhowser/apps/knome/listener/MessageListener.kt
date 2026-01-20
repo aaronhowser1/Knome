@@ -8,33 +8,36 @@ import kotlin.random.Random
 class MessageListener : ListenerAdapter() {
 
 	override fun onMessageReceived(event: MessageReceivedEvent) {
-		if (event.author.isBot) return
+		val author = event.author
+		val message = event.message
+		val channel = event.channel
+		val guild = event.guild
 
-		if (event.message.mentions.isMentioned(event.jda.selfUser)) {
-			event.message.reply("!!!").queue()
+		if (author.isBot) return
+
+		if (message.mentions.isMentioned(event.jda.selfUser)) {
+			message.reply("!!!").queue()
 		}
 
-		if (event.author.idLong == AaronServerConstants.ARIEL_MEMBER_ID) {
-			if (Random.nextInt(100) == 0) {
-				val insults = listOf(
-					"wrong", "stfu", "shut up", "no", "and?", "whatever"
-				)
-				event.message.reply(insults.random()).queue()
-			}
+		if (author.idLong == AaronServerConstants.ARIEL_MEMBER_ID && Random.nextInt(100) == 0) {
+			val insults = listOf("wrong", "stfu", "shut up", "no", "and?", "whatever")
+			message.reply(insults.random()).queue()
+			return
 		}
 
-		if (event.author.idLong == AaronServerConstants.AARON_MEMBER_ID) {
+		if (author.idLong == AaronServerConstants.AARON_MEMBER_ID) {
+			if (channel.idLong == AaronServerConstants.PHILOSOPHY_CHANNEL_ID) return
 
-			if (event.channel.idLong == AaronServerConstants.PHILOSOPHY_CHANNEL_ID) return
-			if (AaronServerConstants.channelIsInGroup(event.guild, event.channel.idLong, AaronServerConstants.MOD_UPDATES_GROUP_ID)) return
-			if (AaronServerConstants.channelIsInGroup(event.guild, event.channel.idLong, AaronServerConstants.SERVER_GROUP_ID)) return
+			val ignoredGroups = listOf(
+				AaronServerConstants.MOD_UPDATES_GROUP_ID,
+				AaronServerConstants.SERVER_GROUP_ID
+			)
+
+			if (ignoredGroups.any { groupId -> AaronServerConstants.channelIsInGroup(guild, channel.idLong, groupId) }) return
 
 			if (Random.nextInt(200) == 0) {
-				val affirmations = listOf(
-					"so true", "real", "facts"
-				)
-
-				event.message.reply(affirmations.random()).queue()
+				val affirmations = listOf("so true", "real", "facts")
+				message.reply(affirmations.random()).queue()
 			}
 		}
 	}
