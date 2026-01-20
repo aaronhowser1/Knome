@@ -14,7 +14,7 @@ object StopCommand {
 	const val RESTART_AFTER_ARGUMENT = "restart_after"
 
 	fun getCommand(): SlashCommandData {
-		return Commands.slash(CrosspostCommand.COMMAND_NAME, "Stop bot")
+		return Commands.slash(COMMAND_NAME, "Stop bot")
 			.addOption(OptionType.BOOLEAN, RESTART_AFTER_ARGUMENT, "Restart after", false)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
@@ -22,8 +22,11 @@ object StopCommand {
 	fun handleStop(event: SlashCommandInteractionEvent) {
 		val shouldRestart = event.getOption(RESTART_AFTER_ARGUMENT)?.asBoolean ?: false
 
-		event.hook.sendMessage("Stopping bot...${if (shouldRestart) " (will restart)" else ""}").queue {
-			exitProcess(if (shouldRestart) 2 else 0)
+		event.deferReply(true).queue { hook ->
+			hook.sendMessage("Stopping bot...${if (shouldRestart) " (will restart)" else ""}").queue {
+				Thread.sleep(200)
+				exitProcess(if (shouldRestart) 2 else 99) // 2 = restart, 99 = kill
+			}
 		}
 	}
 
