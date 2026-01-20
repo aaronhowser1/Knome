@@ -23,4 +23,13 @@ object QuoteRepository {
 
 	val quotes: MongoCollection<Document> = database.getCollection("quotes")
 
+	fun isOnline(): Boolean {
+		return try {
+			database.runCommand(Document("ping", 1))
+			true
+		} catch (e: Exception) {
+			false
+		}
+	}
+
 }

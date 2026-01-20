@@ -1,5 +1,6 @@
 package dev.aaronhowser.apps.knome
 
+import dev.aaronhowser.apps.knome.feature.QuoteRepository
 import dev.aaronhowser.apps.knome.listener.CommandListener
 import dev.aaronhowser.apps.knome.listener.MessageListener
 import dev.aaronhowser.apps.knome.util.AaronServerConstants
@@ -36,7 +37,12 @@ object KnomeBot {
 		jda.awaitReady()
 
 		val bots = jda.getTextChannelById(AaronServerConstants.BOTS_CHANNEL_ID)
-		bots?.sendMessage("Knome is starting up...")?.queue()
+		if (bots != null) {
+			bots.sendMessage("Knome is starting up...").queue()
+			if (!QuoteRepository.isOnline()) {
+				bots.sendMessage("⚠️ Warning: Quote database is offline! Some features may not work.").queue()
+			}
+		}
 	}
 
 }
