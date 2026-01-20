@@ -9,6 +9,7 @@ object AaronServerConstants {
 	const val MODLOG_CHANNEL_ID = 1263962403238973532
 	const val PHILOSOPHY_CHANNEL_ID = 1406029327421804655
 	const val OFF_TOPIC_CHANNEL_ID = 1264017551806169130
+	const val BOTS_CHANNEL_ID = 1405759176222965780
 
 	fun getModlog(jda: JDA): TextChannel = jda.getTextChannelById(MODLOG_CHANNEL_ID) ?: error("Modlog channel not found")
 

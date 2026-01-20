@@ -2,6 +2,7 @@ package dev.aaronhowser.apps.knome
 
 import dev.aaronhowser.apps.knome.listener.CommandListener
 import dev.aaronhowser.apps.knome.listener.MessageListener
+import dev.aaronhowser.apps.knome.util.AaronServerConstants
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.requests.GatewayIntent
 import java.util.logging.Logger
@@ -16,7 +17,7 @@ object KnomeBot {
 
 		val token = System.getenv("KNOME_TOKEN") ?: error("KNOME_TOKEN environment variable not set")
 
-		JDABuilder
+		val jda = JDABuilder
 			.createDefault(
 				token,
 				GatewayIntent.MESSAGE_CONTENT,
@@ -31,6 +32,11 @@ object KnomeBot {
 				MessageListener()
 			)
 			.build()
+
+		jda.awaitReady()
+
+		val bots = jda.getTextChannelById(AaronServerConstants.BOTS_CHANNEL_ID)
+		bots?.sendMessage("Knome is starting up...")?.queue()
 	}
 
 }
