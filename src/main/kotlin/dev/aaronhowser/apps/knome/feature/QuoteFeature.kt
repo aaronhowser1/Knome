@@ -3,6 +3,7 @@ package dev.aaronhowser.apps.knome.feature
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Sorts
+import dev.aaronhowser.apps.knome.KnomeBot
 import org.bson.Document
 
 object QuoteFeature {
@@ -40,6 +41,9 @@ object QuoteFeature {
 
 		QuoteRepository.quotes.insertOne(newQuote)
 
+		KnomeBot.LOGGER.info("Added new quote #$newId by user $user")
+		KnomeBot.LOGGER.fine("Quote message: $message")
+
 		return Quote.QuoteWithId(newId, user, message)
 	}
 
@@ -75,6 +79,9 @@ object QuoteFeature {
 
 		val userName = document.getString(USER_FIELD)
 		val message = document.getString(MESSAGE_FIELD)
+
+		KnomeBot.LOGGER.info("Removed quote #$id by user $userName")
+		KnomeBot.LOGGER.fine("Quote message: $message")
 
 		return Quote.QuoteWithoutId(userName, message)
 	}
