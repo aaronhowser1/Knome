@@ -39,6 +39,11 @@ object KnomeBot {
 
 		val bots = jda.getTextChannelById(AaronServerConstants.BOTS_CHANNEL_ID)
 		if (bots != null) {
+			val mostRecentMessage = bots.history.retrievePast(1).complete().firstOrNull()
+			if (mostRecentMessage != null && mostRecentMessage.author.idLong == jda.selfUser.idLong) {
+				return
+			}
+
 			bots.sendMessage("Knome is starting up...").queue()
 
 			val quotesOnline = runBlocking { QuoteRepository.isOnline() }
