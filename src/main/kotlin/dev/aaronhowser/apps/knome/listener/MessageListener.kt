@@ -16,13 +16,17 @@ class MessageListener : ListenerAdapter() {
 		if (author.isBot) return
 
 		if (message.mentions.isMentioned(event.jda.selfUser)) {
-			message.reply("!!!").queue()
+			message.reply(getRandomInsult()).queue()
 		}
 
-		if (author.idLong == AaronServerConstants.ARIEL_MEMBER_ID && Random.nextInt(100) == 0) {
-			val insults = listOf("wrong", "stfu", "shut up", "no", "and?", "whatever")
-			message.reply(insults.random()).queue()
-			return
+		if (author.idLong == AaronServerConstants.ARIEL_MEMBER_ID) {
+			val shouldInsult = Random.nextInt(100) == 0
+					|| message.contentRaw.lowercase().contains("be nice")
+
+			if (shouldInsult) {
+				message.reply(getRandomInsult()).queue()
+				return
+			}
 		}
 
 		if (author.idLong == AaronServerConstants.AARON_MEMBER_ID) {
@@ -48,4 +52,18 @@ class MessageListener : ListenerAdapter() {
 		}
 	}
 
+	fun getRandomInsult(): String {
+		val insults = listOf(
+			"wrong",
+			"stfu",
+			"shut up",
+			"no",
+			"and?",
+			"whatever",
+			"go away",
+			"ugh"
+		)
+
+		return insults.random()
+	}
 }
