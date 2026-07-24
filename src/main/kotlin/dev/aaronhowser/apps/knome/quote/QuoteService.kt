@@ -32,6 +32,7 @@ object QuoteService {
 		return lastDocument?.getInteger(ID_FIELD)
 	}
 
+	@Synchronized
 	fun addQuote(user: String, message: String): Quote.QuoteWithId {
 		val newId = getNextId()
 		val newQuote = Document()
@@ -60,7 +61,7 @@ object QuoteService {
 		return Quote.QuoteWithId(id, user, message)
 	}
 
-	fun getQuote(id: Int): Quote? {
+	fun getQuote(id: Int): Quote.QuoteWithId? {
 		val document = QuoteRepository.quotes
 			.find(Filters.eq(ID_FIELD, id))
 			.firstOrNull()
@@ -72,7 +73,7 @@ object QuoteService {
 		return Quote.QuoteWithId(id, userName, message)
 	}
 
-	fun removeQuote(id: Int): Quote? {
+	fun removeQuote(id: Int): Quote.QuoteWithoutId? {
 		val document = QuoteRepository.quotes
 			.findOneAndDelete(Filters.eq(ID_FIELD, id))
 			?: return null
@@ -92,9 +93,9 @@ object QuoteService {
 	): List<Quote.QuoteWithId> {
 		val quotes = mutableListOf<Quote.QuoteWithId>()
 
-		val documents = QuoteRepository.quotes.find()
+		val documents = QuoteRepository.quotes
+			.find(Filters.gte(ID_FIELD, startingAt))
 			.sort(Sorts.ascending(ID_FIELD))
-			.skip(startingAt)
 			.limit(amount)
 
 		for (document in documents) {

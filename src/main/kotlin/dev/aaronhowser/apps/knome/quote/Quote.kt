@@ -21,8 +21,8 @@ sealed class Quote {
 
 	fun getEmbed(): MessageEmbed {
 		val embedBuilder = EmbedBuilder()
-			.setDescription(message)
-			.setFooter("- $user")
+			.setDescription(message.take(MessageEmbed.DESCRIPTION_MAX_LENGTH))
+			.setFooter("- ${user.take(MessageEmbed.TEXT_MAX_LENGTH - 2)}")
 
 		if (this is QuoteWithId) {
 			embedBuilder.setTitle("Quote #$id")
@@ -33,22 +33,26 @@ sealed class Quote {
 
 	companion object {
 		fun List<Quote>.getEmbedDescription(): String {
-			val sb = StringBuilder()
+			val description = StringBuilder()
 
-			for (quote in this) {
+			for ((index, quote) in withIndex()) {
 				if (quote is QuoteWithId) {
-					sb.append("**#${quote.id}**")
+					description.append("**#${quote.id}**")
 				}
 
-				sb.append("\n  ${quote.message}")
-				sb.append("\n  \\- *${quote.user}*")
+				description.append("\n  ${quote.message}")
+				description.append("\n  \\- *${quote.user}*")
 
-				if (quote != this.last()) {
-					sb.append("\n\n")
+				if (index < lastIndex) {
+					description.append("\n\n")
+				}
+
+				if (description.length >= MessageEmbed.DESCRIPTION_MAX_LENGTH) {
+					return description.take(MessageEmbed.DESCRIPTION_MAX_LENGTH).toString()
 				}
 			}
 
-			return sb.toString()
+			return description.toString()
 		}
 	}
 

@@ -15,7 +15,7 @@ object QuoteRepository {
 
 	private val mongoClient: MongoClient = MongoClients.create(
 		MongoClientSettings.builder()
-			.applyConnectionString(ConnectionString("mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000"))
+			.applyConnectionString(ConnectionString(getConnectionString()))
 			.applicationName("knome")
 			.uuidRepresentation(UuidRepresentation.STANDARD)
 			.build()
@@ -36,4 +36,12 @@ object QuoteRepository {
 		}
 	}
 
+	fun close() {
+		mongoClient.close()
+	}
+
+	private fun getConnectionString(): String {
+		return System.getenv("KNOME_MONGO_URI")
+			?: "mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000"
+	}
 }

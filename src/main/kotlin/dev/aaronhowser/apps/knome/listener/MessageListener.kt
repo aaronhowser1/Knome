@@ -11,12 +11,12 @@ class MessageListener : ListenerAdapter() {
 		val author = event.author
 		val message = event.message
 		val channel = event.channel
-		val guild = event.guild
 
 		if (author.isBot) return
 
 		if (message.mentions.isMentioned(event.jda.selfUser)) {
 			message.reply(getRandomInsult()).queue()
+			return
 		}
 
 		if (author.idLong == AaronServer.ARIEL_MEMBER_ID) {
@@ -30,30 +30,37 @@ class MessageListener : ListenerAdapter() {
 		}
 
 		if (author.idLong == AaronServer.AARON_MEMBER_ID) {
+			if (!event.isFromGuild) return
 			if (channel.idLong == AaronServer.PHILOSOPHY_CHANNEL_ID) return
 
-			val ignoredGroups = listOf(
-				AaronServer.MOD_UPDATES_GROUP_ID,
-				AaronServer.SERVER_GROUP_ID
-			)
+			val ignored = IGNORED_GROUP_IDS.any { groupId ->
+				AaronServer.channelIsInGroup(event.guild, channel.idLong, groupId)
+			}
 
-			if (ignoredGroups.any { groupId -> AaronServer.channelIsInGroup(guild, channel.idLong, groupId) }) return
+			if (ignored) return
 
 			if (Random.nextInt(200) == 0) {
-				val affirmations = listOf("so true", "real", "facts")
-				message.reply(affirmations.random()).queue()
+				message.reply(AFFIRMATIONS.random()).queue()
 			}
 		}
 
 		if (channel.idLong == AaronServer.OFF_TOPIC_CHANNEL_ID) {
 			if (Random.nextInt(300) == 0) {
-				event.channel.sendTyping()
+				event.channel.sendTyping().queue()
 			}
 		}
 	}
 
-	fun getRandomInsult(): String {
-		val insults = listOf(
+	private fun getRandomInsult(): String = INSULTS.random()
+
+	private companion object {
+		val IGNORED_GROUP_IDS = setOf(
+			AaronServer.MOD_UPDATES_GROUP_ID,
+			AaronServer.SERVER_GROUP_ID
+		)
+
+		val AFFIRMATIONS = listOf("so true", "real", "facts")
+		val INSULTS = listOf(
 			"wrong",
 			"stfu",
 			"shut up",
@@ -63,7 +70,5 @@ class MessageListener : ListenerAdapter() {
 			"go away",
 			"ugh"
 		)
-
-		return insults.random()
 	}
 }

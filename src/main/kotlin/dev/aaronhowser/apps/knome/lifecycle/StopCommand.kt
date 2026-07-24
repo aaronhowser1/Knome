@@ -26,7 +26,6 @@ object StopCommand {
 		event.deferReply(true).queue { hook ->
 			KnomeBot.LOGGER.info("Stopping bot... (will restart: $shouldRestart)")
 			hook.sendMessage("Stopping bot...${if (shouldRestart) " (will restart)" else ""}").queue {
-				Thread.sleep(200)
 				exitProcess(if (shouldRestart) 2 else 99)
 			}
 		}

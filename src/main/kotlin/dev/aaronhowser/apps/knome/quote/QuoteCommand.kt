@@ -1,10 +1,14 @@
 package dev.aaronhowser.apps.knome.quote
 
+import dev.aaronhowser.apps.knome.KnomeBot
+import dev.aaronhowser.apps.knome.discord.await
 import dev.aaronhowser.apps.knome.quote.Quote.Companion.getEmbedDescription
 import net.dv8tion.jda.api.EmbedBuilder
+import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
+import net.dv8tion.jda.api.interactions.commands.build.OptionData
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
 
@@ -30,29 +34,46 @@ object QuoteCommand {
 		return Commands.slash(COMMAND_NAME, "Quotes!")
 			.addSubcommands(
 				SubcommandData(ADD_SUBCOMMAND, "Add a quote")
-					.addOption(OptionType.STRING, QUOTEE_ARGUMENT, "Person to quote", true)
-					.addOption(OptionType.STRING, MESSAGE_ARGUMENT, "Quote message", true),
+					.addOptions(
+						OptionData(OptionType.STRING, QUOTEE_ARGUMENT, "Person to quote", true)
+							.setRequiredLength(1, MAX_QUOTEE_LENGTH),
+						OptionData(OptionType.STRING, MESSAGE_ARGUMENT, "Quote message", true)
+							.setRequiredLength(1, MAX_MESSAGE_LENGTH)
+					),
+
 				SubcommandData(GET_SUBCOMMAND, "Get a quote by ID")
-					.addOption(OptionType.INTEGER, ID_ARGUMENT, "Quote id", true),
+					.addOptions(idOption()),
+
 				SubcommandData(DELETE_SUBCOMMAND, "Delete a quote by ID")
-					.addOption(OptionType.INTEGER, ID_ARGUMENT, "Quote id", true),
+					.addOptions(idOption()),
+
 				SubcommandData(LIST_SUBCOMMAND, "List quotes")
-					.addOption(OptionType.INTEGER, AMOUNT_SUBCOMMAND, "Number of quotes to list", false)
-					.addOption(OptionType.INTEGER, STARTING_AT_ARGUMENT, "Starting quote ID", false),
+					.addOptions(
+						OptionData(OptionType.INTEGER, AMOUNT_SUBCOMMAND, "Number of quotes to list")
+							.setRequiredRange(1, MAX_LIST_AMOUNT.toLong()),
+						OptionData(OptionType.INTEGER, STARTING_AT_ARGUMENT, "Starting quote ID")
+							.setMinValue(0)
+					),
+
 				SubcommandData(GET_RANDOM_SUBCOMMAND, "Get a random quote")
 			)
 	}
 
 	suspend fun handleQuote(event: SlashCommandInteractionEvent) {
-		event.deferReply(false).complete()
+		event.deferReply().await()
 
-		when (val subcommand = event.subcommandName) {
-			ADD_SUBCOMMAND -> handleAddQuote(event)
-			GET_SUBCOMMAND -> handleGetQuote(event)
-			DELETE_SUBCOMMAND -> handleDeleteQuote(event)
-			LIST_SUBCOMMAND -> handleListQuotes(event)
-			GET_RANDOM_SUBCOMMAND -> handleGetRandomQuote(event)
-			else -> event.hook.sendMessage("Unknown subcommand: $subcommand").queue()
+		try {
+			when (val subcommand = event.subcommandName) {
+				ADD_SUBCOMMAND -> handleAddQuote(event)
+				GET_SUBCOMMAND -> handleGetQuote(event)
+				DELETE_SUBCOMMAND -> handleDeleteQuote(event)
+				LIST_SUBCOMMAND -> handleListQuotes(event)
+				GET_RANDOM_SUBCOMMAND -> handleGetRandomQuote(event)
+				else -> event.hook.sendMessage("Unknown subcommand: $subcommand").queue()
+			}
+		} catch (exception: Exception) {
+			KnomeBot.LOGGER.severe("Quote command failed: ${exception.stackTraceToString()}")
+			event.hook.sendMessage("The quote database is unavailable. Please try again later.").queue()
 		}
 	}
 
@@ -107,6 +128,11 @@ object QuoteCommand {
 	}
 
 	private fun handleDeleteQuote(event: SlashCommandInteractionEvent) {
+		if (event.member?.hasPermission(Permission.ADMINISTRATOR) != true) {
+			event.hook.sendMessage("You need the Administrator permission to delete quotes.").queue()
+			return
+		}
+
 		val id = event.getOption(ID_ARGUMENT)?.asInt
 
 		if (id == null) {
@@ -150,4 +176,12 @@ object QuoteCommand {
 		event.hook.sendMessageEmbeds(embed).queue()
 	}
 
+	private fun idOption(): OptionData {
+		return OptionData(OptionType.INTEGER, ID_ARGUMENT, "Quote ID", true)
+			.setMinValue(0)
+	}
+
+	private const val MAX_QUOTEE_LENGTH = 100
+	private const val MAX_MESSAGE_LENGTH = 1_000
+	private const val MAX_LIST_AMOUNT = 25
 }
