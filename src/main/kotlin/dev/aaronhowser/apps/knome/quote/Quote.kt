@@ -1,4 +1,4 @@
-package dev.aaronhowser.apps.knome.feature
+package dev.aaronhowser.apps.knome.quote
 
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.entities.MessageEmbed

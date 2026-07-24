@@ -1,6 +1,5 @@
-package dev.aaronhowser.apps.knome.command
+package dev.aaronhowser.apps.knome.crosspost
 
-import dev.aaronhowser.apps.knome.feature.CrosspostFeature
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
@@ -16,8 +15,8 @@ object CrosspostCommand {
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Crosspost messages")
-			.addOption(OptionType.STRING, "start", "First message ID", true)
-			.addOption(OptionType.STRING, "end", "Last message ID", false)
+			.addOption(OptionType.STRING, START_ARGUMENT, "First message ID", true)
+			.addOption(OptionType.STRING, END_ARGUMENT, "Last message ID", false)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
 
@@ -35,10 +34,10 @@ object CrosspostCommand {
 		val channel = event.channel
 
 		try {
-			CrosspostFeature.crosspost(
+			CrosspostService.crosspost(
 				jda = event.jda,
-				startId = startId,
-				endId = endId,
+				startMessageId = startId,
+				endMessageId = endId,
 				channel = channel
 			)
 
@@ -47,22 +46,6 @@ object CrosspostCommand {
 			event.hook.sendMessage("Error: ${e.message}").queue()
 		} catch (e: Exception) {
 			event.hook.sendMessage("An unexpected error occurred: ${e.message}").queue()
-		}
-	}
-
-	data class MessageReference(val guildId: Long, val channelId: Long, val messageId: Long) {
-		companion object {
-			fun fromLink(link: String): MessageReference {
-				val parts = link
-					.removePrefix("https://discord.com/channels/")
-					.split("/")
-
-				return MessageReference(
-					guildId = parts[0].toLong(),
-					channelId = parts[1].toLong(),
-					messageId = parts[2].toLong()
-				)
-			}
 		}
 	}
 

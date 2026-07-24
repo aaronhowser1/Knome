@@ -1,4 +1,4 @@
-package dev.aaronhowser.apps.knome.feature
+package dev.aaronhowser.apps.knome.quote
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings

@@ -1,8 +1,8 @@
 package dev.aaronhowser.apps.knome.listener
 
-import dev.aaronhowser.apps.knome.command.CrosspostCommand
-import dev.aaronhowser.apps.knome.command.QuoteCommand
-import dev.aaronhowser.apps.knome.command.StopCommand
+import dev.aaronhowser.apps.knome.crosspost.CrosspostCommand
+import dev.aaronhowser.apps.knome.lifecycle.StopCommand
+import dev.aaronhowser.apps.knome.quote.QuoteCommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

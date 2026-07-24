@@ -1,4 +1,4 @@
-package dev.aaronhowser.apps.knome.feature
+package dev.aaronhowser.apps.knome.quote
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
@@ -6,7 +6,7 @@ import com.mongodb.client.model.Sorts
 import dev.aaronhowser.apps.knome.KnomeBot
 import org.bson.Document
 
-object QuoteFeature {
+object QuoteService {
 
 	private const val ID_FIELD = "id"
 	private const val USER_FIELD = "user"
@@ -92,17 +92,18 @@ object QuoteFeature {
 	): List<Quote.QuoteWithId> {
 		val quotes = mutableListOf<Quote.QuoteWithId>()
 
-		QuoteRepository.quotes.find()
+		val documents = QuoteRepository.quotes.find()
 			.sort(Sorts.ascending(ID_FIELD))
 			.skip(startingAt)
 			.limit(amount)
-			.forEach { document ->
-				val id = document.getInteger(ID_FIELD)
-				val userName = document.getString(USER_FIELD)
-				val message = document.getString(MESSAGE_FIELD)
 
-				quotes.add(Quote.QuoteWithId(id, userName, message))
-			}
+		for (document in documents) {
+			val id = document.getInteger(ID_FIELD)
+			val userName = document.getString(USER_FIELD)
+			val message = document.getString(MESSAGE_FIELD)
+
+			quotes.add(Quote.QuoteWithId(id, userName, message))
+		}
 
 		return quotes
 	}

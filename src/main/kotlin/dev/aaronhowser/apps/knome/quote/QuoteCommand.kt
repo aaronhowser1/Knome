@@ -1,13 +1,12 @@
-package dev.aaronhowser.apps.knome.command
+package dev.aaronhowser.apps.knome.quote
 
+import dev.aaronhowser.apps.knome.quote.Quote.Companion.getEmbedDescription
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData
-import dev.aaronhowser.apps.knome.feature.Quote.Companion.getEmbedDescription
-import dev.aaronhowser.apps.knome.feature.QuoteFeature
 
 object QuoteCommand {
 
@@ -66,7 +65,7 @@ object QuoteCommand {
 			return
 		}
 
-		val quote = QuoteFeature.addQuote(
+		val quote = QuoteService.addQuote(
 			user = quotee,
 			message = message
 		)
@@ -88,7 +87,7 @@ object QuoteCommand {
 			return
 		}
 
-		val quote = QuoteFeature.getQuote(id)
+		val quote = QuoteService.getQuote(id)
 		if (quote == null) {
 			event.hook.sendMessage("Quote with ID $id not found.").queue()
 			return
@@ -98,7 +97,7 @@ object QuoteCommand {
 	}
 
 	private fun handleGetRandomQuote(event: SlashCommandInteractionEvent) {
-		val quote = QuoteFeature.getRandomQuote()
+		val quote = QuoteService.getRandomQuote()
 		if (quote == null) {
 			event.hook.sendMessage("No quotes found.").queue()
 			return
@@ -115,7 +114,7 @@ object QuoteCommand {
 			return
 		}
 
-		val deletedQuote = QuoteFeature.removeQuote(id)
+		val deletedQuote = QuoteService.removeQuote(id)
 		if (deletedQuote == null) {
 			event.hook.sendMessage("Quote with ID $id not found.").queue()
 			return
@@ -134,14 +133,14 @@ object QuoteCommand {
 		val amount = event.getOption(AMOUNT_SUBCOMMAND)?.asInt ?: 10
 		val startingAt = event.getOption(STARTING_AT_ARGUMENT)?.asInt ?: 0
 
-		val quotes = QuoteFeature.getQuotes(amount, startingAt)
+		val quotes = QuoteService.getQuotes(amount, startingAt)
 
 		if (quotes.isEmpty()) {
 			event.hook.sendMessage("No quotes found.").queue()
 			return
 		}
 
-		val amountQuotes = QuoteFeature.getMaxId() ?: 0
+		val amountQuotes = QuoteService.getMaxId() ?: 0
 
 		val embed = EmbedBuilder()
 			.setTitle("Quotes ${quotes.first().id} - ${quotes.last().id} / $amountQuotes")

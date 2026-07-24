@@ -1,4 +1,4 @@
-package dev.aaronhowser.apps.knome.command
+package dev.aaronhowser.apps.knome.lifecycle
 
 import dev.aaronhowser.apps.knome.KnomeBot
 import net.dv8tion.jda.api.Permission
@@ -27,7 +27,7 @@ object StopCommand {
 			KnomeBot.LOGGER.info("Stopping bot... (will restart: $shouldRestart)")
 			hook.sendMessage("Stopping bot...${if (shouldRestart) " (will restart)" else ""}").queue {
 				Thread.sleep(200)
-				exitProcess(if (shouldRestart) 2 else 99) // 2 = restart, 99 = kill
+				exitProcess(if (shouldRestart) 2 else 99)
 			}
 		}
 	}

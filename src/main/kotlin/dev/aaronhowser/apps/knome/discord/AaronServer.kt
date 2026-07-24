@@ -1,10 +1,10 @@
-package dev.aaronhowser.apps.knome.util
+package dev.aaronhowser.apps.knome.discord
 
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel
 
-object AaronServerConstants {
+object AaronServer {
 
 	const val MODLOG_CHANNEL_ID = 1263962403238973532
 	const val PHILOSOPHY_CHANNEL_ID = 1406029327421804655

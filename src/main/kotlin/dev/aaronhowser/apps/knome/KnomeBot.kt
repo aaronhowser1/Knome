@@ -1,9 +1,9 @@
 package dev.aaronhowser.apps.knome
 
-import dev.aaronhowser.apps.knome.feature.QuoteRepository
+import dev.aaronhowser.apps.knome.discord.AaronServer
 import dev.aaronhowser.apps.knome.listener.CommandListener
 import dev.aaronhowser.apps.knome.listener.MessageListener
-import dev.aaronhowser.apps.knome.util.AaronServerConstants
+import dev.aaronhowser.apps.knome.quote.QuoteRepository
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.requests.GatewayIntent
@@ -37,7 +37,7 @@ object KnomeBot {
 
 		jda.awaitReady()
 
-		val bots = jda.getTextChannelById(AaronServerConstants.BOTS_CHANNEL_ID)
+		val bots = jda.getTextChannelById(AaronServer.BOTS_CHANNEL_ID)
 		if (bots != null) {
 			val mostRecentMessage = bots.history.retrievePast(1).complete().firstOrNull()
 			if (mostRecentMessage != null && mostRecentMessage.author.idLong == jda.selfUser.idLong) {

@@ -1,6 +1,6 @@
 package dev.aaronhowser.apps.knome.listener
 
-import dev.aaronhowser.apps.knome.util.AaronServerConstants
+import dev.aaronhowser.apps.knome.discord.AaronServer
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 import kotlin.random.Random
@@ -19,7 +19,7 @@ class MessageListener : ListenerAdapter() {
 			message.reply(getRandomInsult()).queue()
 		}
 
-		if (author.idLong == AaronServerConstants.ARIEL_MEMBER_ID) {
+		if (author.idLong == AaronServer.ARIEL_MEMBER_ID) {
 			val shouldInsult = Random.nextInt(100) == 0
 					|| message.contentRaw.lowercase().contains("be nice")
 
@@ -29,15 +29,15 @@ class MessageListener : ListenerAdapter() {
 			}
 		}
 
-		if (author.idLong == AaronServerConstants.AARON_MEMBER_ID) {
-			if (channel.idLong == AaronServerConstants.PHILOSOPHY_CHANNEL_ID) return
+		if (author.idLong == AaronServer.AARON_MEMBER_ID) {
+			if (channel.idLong == AaronServer.PHILOSOPHY_CHANNEL_ID) return
 
 			val ignoredGroups = listOf(
-				AaronServerConstants.MOD_UPDATES_GROUP_ID,
-				AaronServerConstants.SERVER_GROUP_ID
+				AaronServer.MOD_UPDATES_GROUP_ID,
+				AaronServer.SERVER_GROUP_ID
 			)
 
-			if (ignoredGroups.any { groupId -> AaronServerConstants.channelIsInGroup(guild, channel.idLong, groupId) }) return
+			if (ignoredGroups.any { groupId -> AaronServer.channelIsInGroup(guild, channel.idLong, groupId) }) return
 
 			if (Random.nextInt(200) == 0) {
 				val affirmations = listOf("so true", "real", "facts")
@@ -45,7 +45,7 @@ class MessageListener : ListenerAdapter() {
 			}
 		}
 
-		if (channel.idLong == AaronServerConstants.OFF_TOPIC_CHANNEL_ID) {
+		if (channel.idLong == AaronServer.OFF_TOPIC_CHANNEL_ID) {
 			if (Random.nextInt(300) == 0) {
 				event.channel.sendTyping()
 			}

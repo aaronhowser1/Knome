@@ -1,14 +1,14 @@
-package dev.aaronhowser.apps.knome.util
+package dev.aaronhowser.apps.knome.crosspost
 
+import dev.aaronhowser.apps.knome.discord.await
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
-import dev.aaronhowser.apps.knome.util.ExtensionFunctions.await
 
-object DiscordUtils {
+object DiscordMessageRangeReader {
 
-	suspend fun fetchMessagesBetween(
+	suspend fun read(
 		channel: MessageChannel,
 		startMessageId: Long,
 		endMessageId: Long
