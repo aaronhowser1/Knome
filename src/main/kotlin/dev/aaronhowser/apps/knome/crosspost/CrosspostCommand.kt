@@ -122,7 +122,7 @@ object CrosspostCommand {
 			val startId = parseMessageId(event.getValue(MODAL_START_ID)?.asString)
 			val endValue = event.getValue(MODAL_END_ID)?.asString
 			val endId = if (endValue.isNullOrBlank()) startId else parseMessageId(endValue)
-			val destination = parseDestination(event.getValue(DESTINATION_ID)?.asString)
+			val destination = parseDestination(event.getValue(DESTINATION_ID)?.asStringList?.singleOrNull())
 			val draft = prepareDraft(event.user.idLong, startId, endId, event.channel)
 			publish(draft, destination, event.hook)
 		} catch (exception: Exception) {
