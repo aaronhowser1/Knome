@@ -6,6 +6,7 @@ import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
 import kotlinx.coroutines.*
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
@@ -36,6 +37,15 @@ class CommandListener : ListenerAdapter() {
 			StopCommand.COMMAND_NAME -> {
 				StopCommand.handleStop(event)
 			}
+		}
+	}
+
+	override fun onButtonInteraction(event: ButtonInteractionEvent) {
+		if (!event.componentId.startsWith("crosspost:")) {
+			return
+		}
+		commandScope.launch {
+			CrosspostCommand.handleButton(event)
 		}
 	}
 

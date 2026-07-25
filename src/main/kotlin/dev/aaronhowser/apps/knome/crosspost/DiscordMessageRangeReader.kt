@@ -16,37 +16,38 @@ object DiscordMessageRangeReader {
 		return withContext(Dispatchers.IO) {
 			val minId = minOf(startMessageId, endMessageId)
 			val maxId = maxOf(startMessageId, endMessageId)
-
 			val collectedMessages = mutableListOf<Message>()
 			var lastMessageId = maxId
 
-			val lastMessage = channel
-				.retrieveMessageById(maxId)
-				.await()
+			val endMessage = channel.retrieveMessageById(maxId).await()
+			channel.retrieveMessageById(minId).await()
+			collectedMessages.add(endMessage)
 
-			collectedMessages.add(lastMessage)
+			if (minId == maxId) {
+				return@withContext collectedMessages
+			}
 
-			while (true) {
-				val batch = channel
-					.getHistoryBefore(lastMessageId, 100)
-					.await()
-					.retrievedHistory
+			while (collectedMessages.size <= MAX_MESSAGES) {
+				val batch = channel.getHistoryBefore(lastMessageId, 100).await().retrievedHistory
+				require(batch.isNotEmpty()) { "The selected message range could not be read." }
 
-				if (batch.isEmpty()) break
-
-				for (msg in batch) {
-					if (msg.idLong < minId) {
+				for (message in batch) {
+					if (message.idLong < minId) {
 						return@withContext collectedMessages.reversed()
 					}
 
-					collectedMessages.add(msg)
+					collectedMessages.add(message)
+					if (message.idLong == minId) {
+						return@withContext collectedMessages.reversed()
+					}
 				}
 
 				lastMessageId = batch.last().idLong
 			}
 
-			return@withContext collectedMessages.reversed()
+			throw IllegalArgumentException("A crosspost can include at most $MAX_MESSAGES Discord messages.")
 		}
 	}
 
+	private const val MAX_MESSAGES = 50
 }

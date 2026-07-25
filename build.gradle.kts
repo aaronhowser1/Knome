@@ -1,5 +1,6 @@
 plugins {
 	kotlin("jvm") version "2.2.20"
+	kotlin("plugin.serialization") version "2.2.20"
 	application
 }
 
@@ -15,6 +16,7 @@ dependencies {
 	val jdaVersion = property("jda_version")
 
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 	implementation("net.dv8tion:JDA:$jdaVersion")
 
 	implementation("org.mongodb:mongodb-driver-sync:5.1.0")
