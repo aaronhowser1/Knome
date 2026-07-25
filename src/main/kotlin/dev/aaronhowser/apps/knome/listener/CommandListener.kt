@@ -6,6 +6,7 @@ import dev.aaronhowser.apps.knome.crosspost.CrosspostStatusCommand
 import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
@@ -55,6 +56,16 @@ class CommandListener : ListenerAdapter() {
 
 		commandScope.launch {
 			CrosspostCommand.handleMessageCrosspost(event)
+		}
+	}
+
+	override fun onModalInteraction(event: ModalInteractionEvent) {
+		if (!event.modalId.startsWith("crosspost-range:")) {
+			return
+		}
+
+		commandScope.launch {
+			CrosspostCommand.handleRangeModal(event)
 		}
 	}
 

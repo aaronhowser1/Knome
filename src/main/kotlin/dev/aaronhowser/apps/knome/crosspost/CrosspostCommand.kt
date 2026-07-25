@@ -6,7 +6,11 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.components.actionrow.ActionRow
 import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.textinput.TextInput
+import net.dv8tion.jda.api.components.textinput.TextInputStyle
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
+import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
@@ -16,6 +20,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
+import net.dv8tion.jda.api.modals.Modal
 import net.dv8tion.jda.api.utils.FileUpload
 
 object CrosspostCommand {
@@ -25,6 +30,9 @@ object CrosspostCommand {
 	private const val START_ARGUMENT = "start"
 	private const val END_ARGUMENT = "end"
 	private const val BUTTON_PREFIX = "crosspost:"
+	private const val MODAL_PREFIX = "crosspost-range:"
+	private const val MODAL_START_ID = "start-message"
+	private const val MODAL_END_ID = "end-message"
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Preview and publish messages from #philosophy")
@@ -61,10 +69,47 @@ object CrosspostCommand {
 			return
 		}
 
+		val startInput = TextInput.create(MODAL_START_ID, TextInputStyle.SHORT)
+			.setValue(event.target.id)
+			.setRequiredRange(1, 100)
+			.build()
+		val endInput = TextInput.create(MODAL_END_ID, TextInputStyle.SHORT)
+			.setPlaceholder("Leave blank to crosspost only the selected message")
+			.setRequired(false)
+			.setMaxLength(100)
+			.build()
+		val modal = Modal.create("$MODAL_PREFIX${event.channelId}:${event.target.id}", "Preview crosspost")
+			.addComponents(
+				Label.of("Start message ID or link", startInput),
+				Label.of("End message ID or link", endInput)
+			)
+			.build()
+
+		event.replyModal(modal).await()
+	}
+
+	suspend fun handleRangeModal(event: ModalInteractionEvent) {
+		if (!event.modalId.startsWith(MODAL_PREFIX)) {
+			return
+		}
+
+		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
+			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
+			return
+		}
+
 		event.deferReply(true).await()
 
 		try {
-			createPreview(event.user.idLong, event.target.idLong, event.target.idLong, event.target.channel, event.hook)
+			val modalParts = event.modalId.removePrefix(MODAL_PREFIX).split(":", limit = 2)
+			require(modalParts.size == 2 && modalParts[0] == event.channelId) {
+				"This crosspost dialog is invalid or was opened in another channel."
+			}
+
+			val startId = parseMessageId(event.getValue(MODAL_START_ID)?.asString)
+			val endValue = event.getValue(MODAL_END_ID)?.asString
+			val endId = if (endValue.isNullOrBlank()) startId else parseMessageId(endValue)
+			createPreview(event.user.idLong, startId, endId, event.channel, event.hook)
 		} catch (exception: Exception) {
 			event.hook.editOriginal("Could not create the preview: ${exception.message}").await()
 		}
