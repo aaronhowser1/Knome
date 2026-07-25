@@ -6,6 +6,7 @@ import dev.aaronhowser.apps.knome.crosspost.CrosspostStatusCommand
 import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
 import kotlinx.coroutines.*
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
@@ -47,6 +48,16 @@ class CommandListener : ListenerAdapter() {
 		}
 	}
 
+	override fun onMessageContextInteraction(event: MessageContextInteractionEvent) {
+		if (event.name != CrosspostCommand.MESSAGE_COMMAND_NAME) {
+			return
+		}
+
+		commandScope.launch {
+			CrosspostCommand.handleMessageCrosspost(event)
+		}
+	}
+
 	override fun onButtonInteraction(event: ButtonInteractionEvent) {
 		if (!event.componentId.startsWith("crosspost:")) {
 			return
@@ -60,6 +71,7 @@ class CommandListener : ListenerAdapter() {
 		event.jda.updateCommands()
 			.addCommands(
 				CrosspostCommand.getCommand(),
+				CrosspostCommand.getMessageCommand(),
 				CrosspostStatusCommand.getCommand(),
 				QuoteCommand.getCommand(),
 				StopCommand.getCommand()

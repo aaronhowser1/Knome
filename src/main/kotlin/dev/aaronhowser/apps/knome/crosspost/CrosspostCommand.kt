@@ -6,10 +6,14 @@ import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.components.actionrow.ActionRow
 import net.dv8tion.jda.api.components.buttons.Button
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
+import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
+import net.dv8tion.jda.api.interactions.InteractionHook
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.OptionType
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import net.dv8tion.jda.api.interactions.commands.build.Commands
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData
 import net.dv8tion.jda.api.utils.FileUpload
@@ -17,6 +21,7 @@ import net.dv8tion.jda.api.utils.FileUpload
 object CrosspostCommand {
 
 	const val COMMAND_NAME = "crosspost"
+	const val MESSAGE_COMMAND_NAME = "Crosspost"
 	private const val START_ARGUMENT = "start"
 	private const val END_ARGUMENT = "end"
 	private const val BUTTON_PREFIX = "crosspost:"
@@ -25,6 +30,11 @@ object CrosspostCommand {
 		return Commands.slash(COMMAND_NAME, "Preview and publish messages from #philosophy")
 			.addOption(OptionType.STRING, START_ARGUMENT, "First message link or ID", true)
 			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
+			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+	}
+
+	fun getMessageCommand(): CommandData {
+		return Commands.message(MESSAGE_COMMAND_NAME)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
 
@@ -37,21 +47,24 @@ object CrosspostCommand {
 		event.deferReply(true).await()
 
 		try {
-			CrosspostConfiguration.requireConfigured()
-
 			val startId = parseMessageId(event.getOption(START_ARGUMENT)?.asString)
 			val endId = event.getOption(END_ARGUMENT)?.asString?.let { value -> parseMessageId(value) } ?: startId
-			val draft = CrosspostService.prepare(
-				ownerId = event.user.idLong,
-				startMessageId = startId,
-				endMessageId = endId,
-				channel = event.channel
-			)
+			createPreview(event.user.idLong, startId, endId, event.channel, event.hook)
+		} catch (exception: Exception) {
+			event.hook.editOriginal("Could not create the preview: ${exception.message}").await()
+		}
+	}
 
-			event.hook.editOriginalEmbeds(createPreview(draft))
-				.setComponents(createButtons(draft.id))
-				.setFiles(draft.images.map { image -> FileUpload.fromData(image.data, image.fileName) })
-				.await()
+	suspend fun handleMessageCrosspost(event: MessageContextInteractionEvent) {
+		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
+			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
+			return
+		}
+
+		event.deferReply(true).await()
+
+		try {
+			createPreview(event.user.idLong, event.target.idLong, event.target.idLong, event.target.channel, event.hook)
 		} catch (exception: Exception) {
 			event.hook.editOriginal("Could not create the preview: ${exception.message}").await()
 		}
@@ -119,6 +132,22 @@ object CrosspostCommand {
 		require(!value.isNullOrBlank()) { "A start message is required." }
 		val id = value.trim().substringAfterLast('/')
 		return id.toLongOrNull() ?: throw IllegalArgumentException("Message IDs and links must end in a numeric message ID.")
+	}
+
+	private suspend fun createPreview(
+		ownerId: Long,
+		startMessageId: Long,
+		endMessageId: Long,
+		channel: MessageChannelUnion,
+		hook: InteractionHook
+	) {
+		CrosspostConfiguration.requireConfigured()
+		val draft = CrosspostService.prepare(ownerId, startMessageId, endMessageId, channel)
+
+		hook.editOriginalEmbeds(createPreview(draft))
+			.setComponents(createButtons(draft.id))
+			.setFiles(draft.images.map { image -> FileUpload.fromData(image.data, image.fileName) })
+			.await()
 	}
 
 	private fun createPreview(draft: CrosspostDraft): List<net.dv8tion.jda.api.entities.MessageEmbed> {
