@@ -10,7 +10,6 @@ import kotlinx.coroutines.*
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent
 import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
@@ -73,27 +72,12 @@ class CommandListener : ListenerAdapter() {
 	}
 
 	override fun onModalInteraction(event: ModalInteractionEvent) {
-		when {
-			event.modalId.startsWith("crosspost-range:") -> {
-				commandScope.launch {
-					CrosspostCommand.handleRangeModal(event)
-				}
-			}
-
-			event.modalId.startsWith("crosspost-publish:") -> {
-				commandScope.launch {
-					CrosspostCommand.handlePublishModal(event)
-				}
-			}
-		}
-	}
-
-	override fun onButtonInteraction(event: ButtonInteractionEvent) {
-		if (!event.componentId.startsWith("crosspost:")) {
+		if (!event.modalId.startsWith("crosspost-range:")) {
 			return
 		}
+
 		commandScope.launch {
-			CrosspostCommand.handleButton(event)
+			CrosspostCommand.handleRangeModal(event)
 		}
 	}
 
