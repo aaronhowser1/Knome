@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.cache.CacheFlag
 import java.util.logging.Logger
 
 object KnomeBot {
@@ -31,6 +32,12 @@ object KnomeBot {
 				GatewayIntent.GUILD_MESSAGE_REACTIONS,
 				GatewayIntent.DIRECT_MESSAGES,
 				GatewayIntent.DIRECT_MESSAGE_REACTIONS,
+			)
+			.disableCache(
+				CacheFlag.VOICE_STATE,
+				CacheFlag.EMOJI,
+				CacheFlag.STICKER,
+				CacheFlag.SCHEDULED_EVENTS,
 			)
 			.addEventListeners(
 				CommandListener(),

@@ -18,6 +18,7 @@ dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
 	implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
 	implementation("net.dv8tion:JDA:$jdaVersion")
+	runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
 
 	implementation("org.mongodb:mongodb-driver-sync:5.1.0")
 }
