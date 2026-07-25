@@ -7,8 +7,10 @@ import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.components.actionrow.ActionRow
 import net.dv8tion.jda.api.components.buttons.Button
 import net.dv8tion.jda.api.components.label.Label
+import net.dv8tion.jda.api.components.selections.StringSelectMenu
 import net.dv8tion.jda.api.components.textinput.TextInput
 import net.dv8tion.jda.api.components.textinput.TextInputStyle
+import net.dv8tion.jda.api.components.textdisplay.TextDisplay
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
 import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
@@ -31,8 +33,10 @@ object CrosspostCommand {
 	private const val END_ARGUMENT = "end"
 	private const val BUTTON_PREFIX = "crosspost:"
 	private const val MODAL_PREFIX = "crosspost-range:"
+	private const val PUBLISH_MODAL_PREFIX = "crosspost-publish:"
 	private const val MODAL_START_ID = "start-message"
 	private const val MODAL_END_ID = "end-message"
+	private const val DESTINATION_ID = "destination"
 
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Preview and publish messages from #philosophy")
@@ -115,8 +119,8 @@ object CrosspostCommand {
 		}
 	}
 
-	suspend fun handleButton(event: ButtonInteractionEvent) {
-		if (!event.componentId.startsWith(BUTTON_PREFIX)) {
+	suspend fun handlePublishModal(event: ModalInteractionEvent) {
+		if (!event.modalId.startsWith(PUBLISH_MODAL_PREFIX)) {
 			return
 		}
 
@@ -127,8 +131,39 @@ object CrosspostCommand {
 
 		event.deferEdit().await()
 
+		val draftId = event.modalId.removePrefix(PUBLISH_MODAL_PREFIX)
+		val destination = when (event.getValue(DESTINATION_ID)?.asString) {
+			"tumblr" -> CrosspostDestination.TUMBLR
+			"bluesky" -> CrosspostDestination.BLUESKY
+			"both" -> CrosspostDestination.BOTH
+			else -> {
+				event.hook.editOriginal("Choose a valid crosspost destination.").await()
+				return
+			}
+		}
+
+		val draft = CrosspostService.claimDraft(draftId, event.user.idLong)
+		if (draft == null) {
+			event.hook.editOriginal("This crosspost preview expired or belongs to someone else.").await()
+			return
+		}
+
+		publish(draft, destination, event.hook)
+	}
+
+	suspend fun handleButton(event: ButtonInteractionEvent) {
+		if (!event.componentId.startsWith(BUTTON_PREFIX)) {
+			return
+		}
+
+		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
+			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
+			return
+		}
+
 		val parts = event.componentId.split(":", limit = 3)
 		if (parts.size != 3) {
+			event.deferEdit().await()
 			event.hook.editOriginal("This crosspost action is invalid.").setComponents(emptyList()).await()
 			return
 		}
@@ -136,30 +171,36 @@ object CrosspostCommand {
 		val action = parts[1]
 		val draftId = parts[2]
 		if (action == "cancel") {
+			event.deferEdit().await()
 			CrosspostService.discardDraft(draftId, event.user.idLong)
 			event.hook.editOriginal("Crosspost cancelled.").setEmbeds(emptyList()).setComponents(emptyList()).await()
 			return
 		}
 
-		val draft = CrosspostService.claimDraft(draftId, event.user.idLong)
+		val draft = CrosspostService.getDraft(draftId, event.user.idLong)
 		if (draft == null) {
+			event.deferEdit().await()
 			event.hook.editOriginal("This crosspost preview expired or belongs to someone else.")
 				.setComponents(emptyList())
 				.await()
 			return
 		}
 
-		val destination = when (action) {
-			"tumblr" -> CrosspostDestination.TUMBLR
-			"bluesky" -> CrosspostDestination.BLUESKY
-			"both" -> CrosspostDestination.BOTH
-			else -> {
-				event.hook.editOriginal("Unknown crosspost destination.").setComponents(emptyList()).await()
-				return
-			}
+		if (action != "review") {
+			event.deferEdit().await()
+			event.hook.editOriginal("Unknown crosspost action.").setComponents(emptyList()).await()
+			return
 		}
 
-		event.hook.editOriginal("Publishing…").setEmbeds(emptyList()).setComponents(emptyList()).await()
+		event.replyModal(createPublishModal(draft)).await()
+	}
+
+	private suspend fun publish(
+		draft: CrosspostDraft,
+		destination: CrosspostDestination,
+		hook: InteractionHook
+	) {
+		hook.editOriginal("Publishing…").setEmbeds(emptyList()).setComponents(emptyList()).await()
 		val results = CrosspostService.publish(draft, destination)
 		val description = results.joinToString("\n") { result ->
 			if (result.succeeded) {
@@ -169,7 +210,7 @@ object CrosspostCommand {
 			}
 		}
 
-		event.hook.editOriginal(description).await()
+		hook.editOriginal(description).await()
 		val trackingError = try {
 			CrosspostRepository.recordSuccessfulPublications(draft, results)
 			null
@@ -177,9 +218,9 @@ object CrosspostCommand {
 			" The posts succeeded, but their Discord messages could not be marked as crossposted: ${exception.message}"
 		}
 		if (trackingError != null) {
-			event.hook.editOriginal(description + "\n\n⚠️" + trackingError).await()
+			hook.editOriginal(description + "\n\n⚠️" + trackingError).await()
 		}
-		CrosspostAuditLog.publish(event.jda, draft, results)
+		CrosspostAuditLog.publish(hook.jda, draft, results)
 	}
 
 	private fun parseMessageId(value: String?): Long {
@@ -257,12 +298,34 @@ object CrosspostCommand {
 	private fun createButtons(draftId: String): List<ActionRow> {
 		return listOf(
 			ActionRow.of(
-				Button.success("${BUTTON_PREFIX}both:$draftId", "Publish both"),
-				Button.primary("${BUTTON_PREFIX}tumblr:$draftId", "Tumblr only"),
-				Button.primary("${BUTTON_PREFIX}bluesky:$draftId", "Bluesky only"),
+				Button.success("${BUTTON_PREFIX}review:$draftId", "Review and publish"),
 				Button.danger("${BUTTON_PREFIX}cancel:$draftId", "Cancel")
 			)
 		)
+	}
+
+	private fun createPublishModal(draft: CrosspostDraft): Modal {
+		val destinationMenu = StringSelectMenu.create(DESTINATION_ID)
+			.addOption("Publish both", "both")
+			.addOption("Tumblr only", "tumblr")
+			.addOption("Bluesky only", "bluesky")
+			.setDefaultValues("both")
+			.build()
+		val blueskyParts = BlueskyPublisher.previewParts(draft)
+		val summary = buildString {
+			append("**Tumblr**\n")
+			append(truncate(draft.content.ifBlank { "(images only)" }, 1500))
+			append("\n\n**Bluesky · ${blueskyParts.size} post${if (blueskyParts.size == 1) "" else "s"}**\n")
+			append(truncate(blueskyParts.joinToString("\n\n") { part -> part.ifBlank { "(images only)" } }, 1500))
+			append("\n\n🖼️ ${draft.images.size} image(s)")
+		}
+
+		return Modal.create("$PUBLISH_MODAL_PREFIX${draft.id}", "Review crosspost")
+			.addComponents(
+				TextDisplay.of(summary),
+				Label.of("Destination", destinationMenu)
+			)
+			.build()
 	}
 
 	private fun truncate(value: String, maximum: Int): String {

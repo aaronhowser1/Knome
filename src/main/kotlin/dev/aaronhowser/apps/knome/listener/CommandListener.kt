@@ -73,12 +73,18 @@ class CommandListener : ListenerAdapter() {
 	}
 
 	override fun onModalInteraction(event: ModalInteractionEvent) {
-		if (!event.modalId.startsWith("crosspost-range:")) {
-			return
-		}
+		when {
+			event.modalId.startsWith("crosspost-range:") -> {
+				commandScope.launch {
+					CrosspostCommand.handleRangeModal(event)
+				}
+			}
 
-		commandScope.launch {
-			CrosspostCommand.handleRangeModal(event)
+			event.modalId.startsWith("crosspost-publish:") -> {
+				commandScope.launch {
+					CrosspostCommand.handlePublishModal(event)
+				}
+			}
 		}
 	}
 
