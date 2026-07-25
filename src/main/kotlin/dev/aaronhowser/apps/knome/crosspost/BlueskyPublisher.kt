@@ -38,8 +38,8 @@ object BlueskyPublisher {
 	suspend fun publish(draft: CrosspostDraft): CrosspostResult {
 		return try {
 			withContext(Dispatchers.IO) {
-				val identifier = environment("KNOME_BLUESKY_IDENTIFIER")
-				val password = environment("KNOME_BLUESKY_APP_PASSWORD")
+				val identifier = environment(CrosspostConfiguration.BLUESKY_IDENTIFIER)
+				val password = environment(CrosspostConfiguration.BLUESKY_APP_PASSWORD)
 				val session = createSession(identifier, password)
 				val imageBlobs = uploadImages(session.accessToken, draft.images)
 				val parts = previewParts(draft)

@@ -163,11 +163,11 @@ object TumblrPublisher {
 		companion object {
 			fun fromEnvironment(): TumblrCredentials {
 				return TumblrCredentials(
-					blogIdentifier = environment("KNOME_TUMBLR_BLOG"),
-					consumerKey = environment("KNOME_TUMBLR_CONSUMER_KEY"),
-					consumerSecret = environment("KNOME_TUMBLR_CONSUMER_SECRET"),
-					accessToken = environment("KNOME_TUMBLR_ACCESS_TOKEN"),
-					accessTokenSecret = environment("KNOME_TUMBLR_ACCESS_TOKEN_SECRET")
+					blogIdentifier = environment(CrosspostConfiguration.TUMBLR_BLOG),
+					consumerKey = environment(CrosspostConfiguration.TUMBLR_CONSUMER_KEY),
+					consumerSecret = environment(CrosspostConfiguration.TUMBLR_CONSUMER_SECRET),
+					accessToken = environment(CrosspostConfiguration.TUMBLR_ACCESS_TOKEN),
+					accessTokenSecret = environment(CrosspostConfiguration.TUMBLR_ACCESS_TOKEN_SECRET)
 				)
 			}
 
