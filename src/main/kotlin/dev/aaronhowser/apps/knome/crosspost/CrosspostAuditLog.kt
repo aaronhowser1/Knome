@@ -33,6 +33,6 @@ object CrosspostAuditLog {
 			embed.addField(result.destination, value.take(1000), false)
 		}
 
-		AaronServer.getModlog(jda).sendMessageEmbeds(embed.build()).queue()
+		AaronServer.getPhilosophyCrossposts(jda).sendMessageEmbeds(embed.build()).queue()
 	}
 }
