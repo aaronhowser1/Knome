@@ -44,6 +44,8 @@ object CrosspostService {
 		val draft = CrosspostDraft(
 			id = UUID.randomUUID().toString(),
 			ownerId = ownerId,
+			channelId = channel.idLong,
+			messageIds = messages.map { message -> message.idLong },
 			messages = messageText.filter { content -> content.isNotBlank() },
 			images = downloadImages(messages),
 			createdAtMillis = System.currentTimeMillis()

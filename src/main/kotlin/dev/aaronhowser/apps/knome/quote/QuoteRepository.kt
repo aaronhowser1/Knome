@@ -21,7 +21,7 @@ object QuoteRepository {
 			.build()
 	)
 
-	private val database: MongoDatabase = mongoClient.getDatabase("knome_bot")
+	internal val database: MongoDatabase = mongoClient.getDatabase("knome_bot")
 
 	val quotes: MongoCollection<Document> = database.getCollection("quotes")
 

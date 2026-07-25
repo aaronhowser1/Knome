@@ -170,6 +170,15 @@ object CrosspostCommand {
 		}
 
 		event.hook.editOriginal(description).await()
+		val trackingError = try {
+			CrosspostRepository.recordSuccessfulPublications(draft, results)
+			null
+		} catch (exception: Exception) {
+			" The posts succeeded, but their Discord messages could not be marked as crossposted: ${exception.message}"
+		}
+		if (trackingError != null) {
+			event.hook.editOriginal(description + "\n\n⚠️" + trackingError).await()
+		}
 		CrosspostAuditLog.publish(event.jda, draft.content, results)
 	}
 
@@ -188,19 +197,28 @@ object CrosspostCommand {
 	) {
 		CrosspostConfiguration.requireConfigured()
 		val draft = CrosspostService.prepare(ownerId, startMessageId, endMessageId, channel)
+		val historySummary = try {
+			CrosspostRepository.getHistorySummary(draft.messageIds)
+		} catch (_: Exception) {
+			"⚠️ Crosspost history is unavailable."
+		}
 
-		hook.editOriginalEmbeds(createPreview(draft))
+		hook.editOriginalEmbeds(createPreview(draft, historySummary))
 			.setComponents(createButtons(draft.id))
 			.setFiles(draft.images.map { image -> FileUpload.fromData(image.data, image.fileName) })
 			.await()
 	}
 
-	private fun createPreview(draft: CrosspostDraft): List<net.dv8tion.jda.api.entities.MessageEmbed> {
+	private fun createPreview(
+		draft: CrosspostDraft,
+		historySummary: String
+	): List<net.dv8tion.jda.api.entities.MessageEmbed> {
 		val tumblrPreview = EmbedBuilder()
 			.setTitle("Tumblr preview")
 			.setColor(0x34526F)
 			.setDescription(truncate(draft.content.ifBlank { "(images only)" }, 4000))
 			.addField("Images", imageSummary(draft), false)
+			.addField("Crosspost history", historySummary, false)
 			.build()
 
 		val blueskyParts = BlueskyPublisher.previewParts(draft)

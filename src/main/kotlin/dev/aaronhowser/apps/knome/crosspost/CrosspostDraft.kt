@@ -3,6 +3,8 @@ package dev.aaronhowser.apps.knome.crosspost
 data class CrosspostDraft(
 	val id: String,
 	val ownerId: Long,
+	val channelId: Long,
+	val messageIds: List<Long>,
 	val messages: List<String>,
 	val images: List<CrosspostImage>,
 	val createdAtMillis: Long
