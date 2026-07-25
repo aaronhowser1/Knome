@@ -19,19 +19,21 @@ object TumblrPublisher {
 	private val httpClient = HttpClient.newHttpClient()
 	private val json = Json { ignoreUnknownKeys = true }
 
-	suspend fun publish(draft: CrosspostDraft): CrosspostResult {
+	suspend fun publish(draft: CrosspostDraft, parentUrl: String?): CrosspostResult {
 		return try {
 			withContext(Dispatchers.IO) {
 				val credentials = TumblrCredentials.fromEnvironment()
 				val url = "https://api.tumblr.com/v2/blog/${encode(credentials.blogIdentifier)}/posts"
 				val boundary = "Knome-${UUID.randomUUID()}"
+				val parent = parentUrl?.let { value -> resolveParent(value, credentials.consumerKey) }
 
-				val requestBody = createMultipartBody(draft, boundary)
+				val requestBody = createMultipartBody(draft, boundary, parent)
 				val authorization = createAuthorization(url, credentials)
 
 				val request = HttpRequest.newBuilder(URI.create(url))
 					.header("Authorization", authorization)
 					.header("Content-Type", "multipart/form-data; boundary=$boundary")
+					.header("User-Agent", USER_AGENT)
 					.POST(HttpRequest.BodyPublishers.ofByteArray(requestBody))
 					.build()
 
@@ -49,7 +51,11 @@ object TumblrPublisher {
 		}
 	}
 
-	private fun createMultipartBody(draft: CrosspostDraft, boundary: String): ByteArray {
+	private fun createMultipartBody(
+		draft: CrosspostDraft,
+		boundary: String,
+		parent: TumblrParent?
+	): ByteArray {
 		val identifiers = draft.images.indices.map { index -> "image-$index" }
 		val content = buildJsonArray {
 			for (message in draft.messages) {
@@ -83,6 +89,11 @@ object TumblrPublisher {
 		val body = buildJsonObject {
 			put("content", content)
 			put("state", "published")
+			if (parent != null) {
+				put("parent_tumblelog_uuid", parent.blogUuid)
+				put("parent_post_id", parent.postId.toLong())
+				put("reblog_key", parent.reblogKey)
+			}
 		}.toString()
 
 		val output = mutableListOf<Byte>()
@@ -95,6 +106,30 @@ object TumblrPublisher {
 
 		append(output, "--$boundary--\r\n".toByteArray())
 		return output.toByteArray()
+	}
+
+	private fun resolveParent(parentUrl: String, consumerKey: String): TumblrParent {
+		val match = POST_URL.matchEntire(parentUrl)
+			?: throw IllegalArgumentException("The prior Tumblr URL is invalid.")
+		val blogIdentifier = match.groupValues[1]
+		val postId = match.groupValues[2]
+		val url = "https://api.tumblr.com/v2/blog/${encode(blogIdentifier)}/posts" +
+			"?id=${encode(postId)}&api_key=${encode(consumerKey)}"
+		val request = HttpRequest.newBuilder(URI.create(url))
+			.header("User-Agent", USER_AGENT)
+			.GET()
+			.build()
+		val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+		require(response.statusCode() in 200..299) { tumblrError(response) }
+		val post = json.parseToJsonElement(response.body()).jsonObject["response"]!!
+			.jsonObject["posts"]!!.jsonArray.singleOrNull()?.jsonObject
+			?: throw IllegalArgumentException("The prior Tumblr post could not be found.")
+		val blogUuid = post["blog"]?.jsonObject?.get("uuid")?.jsonPrimitive?.content
+			?: post["blog_uuid"]?.jsonPrimitive?.content
+			?: throw IllegalArgumentException("Tumblr did not return the prior post's blog UUID.")
+		val reblogKey = post["reblog_key"]?.jsonPrimitive?.content
+			?: throw IllegalArgumentException("Tumblr did not return a reblog key for the prior post.")
+		return TumblrParent(blogUuid, postId, reblogKey)
 	}
 
 	private fun appendPart(
@@ -184,4 +219,13 @@ object TumblrPublisher {
 			}
 		}
 	}
+
+	private data class TumblrParent(
+		val blogUuid: String,
+		val postId: String,
+		val reblogKey: String
+	)
+
+	private const val USER_AGENT = "Knome/1.0"
+	private val POST_URL = Regex("""https://([^/]+\.tumblr\.com)/post/(\d+)(?:/[^?#]*)?(?:[?#].*)?""")
 }

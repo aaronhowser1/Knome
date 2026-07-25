@@ -76,14 +76,18 @@ object CrosspostService {
 		return if (drafts.remove(id, draft)) draft else null
 	}
 
-	suspend fun publish(draft: CrosspostDraft, destination: CrosspostDestination): List<CrosspostResult> {
+	suspend fun publish(
+		draft: CrosspostDraft,
+		destination: CrosspostDestination,
+		parent: CrosspostParent?
+	): List<CrosspostResult> {
 		return coroutineScope {
 			val publishers = mutableListOf<suspend () -> CrosspostResult>()
 			if (destination == CrosspostDestination.TUMBLR || destination == CrosspostDestination.BOTH) {
-				publishers.add { TumblrPublisher.publish(draft) }
+				publishers.add { TumblrPublisher.publish(draft, parent?.tumblrUrl) }
 			}
 			if (destination == CrosspostDestination.BLUESKY || destination == CrosspostDestination.BOTH) {
-				publishers.add { BlueskyPublisher.publish(draft) }
+				publishers.add { BlueskyPublisher.publish(draft, parent?.blueskyUrl) }
 			}
 			publishers.map { publisher -> async { publisher() } }.awaitAll()
 		}

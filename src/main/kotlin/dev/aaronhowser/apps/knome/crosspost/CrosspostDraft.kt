@@ -29,6 +29,11 @@ enum class CrosspostDestination {
 	BOTH
 }
 
+data class CrosspostParent(
+	val blueskyUrl: String?,
+	val tumblrUrl: String?
+)
+
 data class CrosspostResult(
 	val destination: String,
 	val url: String? = null,

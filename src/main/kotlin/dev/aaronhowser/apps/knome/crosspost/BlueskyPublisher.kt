@@ -12,12 +12,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.net.URI
+import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.text.BreakIterator
 import java.time.Instant
 import java.util.Locale
+import java.nio.charset.StandardCharsets
 
 object BlueskyPublisher {
 
@@ -38,7 +40,7 @@ object BlueskyPublisher {
 		return parts
 	}
 
-	suspend fun publish(draft: CrosspostDraft): CrosspostResult {
+	suspend fun publish(draft: CrosspostDraft, parentUrl: String?): CrosspostResult {
 		return try {
 			withContext(Dispatchers.IO) {
 				val identifier = environment(CrosspostConfiguration.BLUESKY_IDENTIFIER)
@@ -47,8 +49,10 @@ object BlueskyPublisher {
 				val imageBlobs = uploadImages(session.accessToken, draft.images)
 
 				val parts = previewParts(draft)
-				var root: RecordReference? = null
-				var parent: RecordReference? = null
+				val replyReferences = parentUrl?.let { url -> resolveReplyReferences(url) }
+				var root = replyReferences?.root
+				var parent = replyReferences?.parent
+				var firstCreated: RecordReference? = null
 
 				for (index in parts.indices) {
 					val images = imageBlobs
@@ -57,6 +61,9 @@ object BlueskyPublisher {
 
 					val record = createPost(session, parts[index], images, root, parent)
 
+					if (firstCreated == null) {
+						firstCreated = record
+					}
 					if (root == null) {
 						root = record
 					}
@@ -64,12 +71,63 @@ object BlueskyPublisher {
 					parent = record
 				}
 
-				val postKey = root!!.uri.substringAfterLast('/')
+				val postKey = firstCreated!!.uri.substringAfterLast('/')
 				CrosspostResult("Bluesky", "https://bsky.app/profile/${session.handle}/post/$postKey")
 			}
 		} catch (exception: Exception) {
 			CrosspostResult("Bluesky", error = exception.message ?: exception.javaClass.simpleName)
 		}
+	}
+
+	private fun resolveReplyReferences(parentUrl: String): ReplyReferences {
+		val match = POST_URL.matchEntire(parentUrl)
+			?: throw IllegalArgumentException("The prior Bluesky URL is invalid.")
+		val actor = match.groupValues[1]
+		val recordKey = match.groupValues[2]
+		val repository = if (actor.startsWith("did:")) {
+			actor
+		} else {
+			getJson("$SERVICE/xrpc/com.atproto.identity.resolveHandle?handle=${encode(actor)}")["did"]!!
+				.jsonPrimitive.content
+		}
+		val parent = getRecord(repository, recordKey)
+		val parentReply = parent.value["reply"]?.jsonObject
+		val root = if (parentReply == null) {
+			parent.reference
+		} else {
+			val rootUri = parentReply["root"]!!.jsonObject["uri"]!!.jsonPrimitive.content
+			val rootParts = rootUri.removePrefix("at://").split("/", limit = 3)
+			require(rootParts.size == 3 && rootParts[1] == "app.bsky.feed.post") {
+				"The prior Bluesky thread root is invalid."
+			}
+			getRecord(rootParts[0], rootParts[2]).reference
+		}
+		return ReplyReferences(root, parent.reference)
+	}
+
+	private fun getRecord(repository: String, recordKey: String): PostRecord {
+		val response = getJson(
+			"$SERVICE/xrpc/com.atproto.repo.getRecord" +
+				"?repo=${encode(repository)}&collection=app.bsky.feed.post&rkey=${encode(recordKey)}"
+		)
+		return PostRecord(
+			reference = RecordReference(
+				uri = response["uri"]!!.jsonPrimitive.content,
+				cid = response["cid"]!!.jsonPrimitive.content
+			),
+			value = response["value"]!!.jsonObject
+		)
+	}
+
+	private fun getJson(url: String): JsonObject {
+		val request = HttpRequest.newBuilder(URI.create(url)).GET().build()
+		val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+		require(response.statusCode() in 200..299) { apiError("Bluesky lookup", response) }
+		return json.parseToJsonElement(response.body()).jsonObject
+	}
+
+	private fun encode(value: String): String {
+		return URLEncoder.encode(value, StandardCharsets.UTF_8)
 	}
 
 	private fun createSession(identifier: String, password: String): BlueskySession {
@@ -254,10 +312,13 @@ object BlueskyPublisher {
 	private data class BlueskySession(val handle: String, val did: String, val accessToken: String)
 	private data class UploadedImage(val blob: JsonObject, val alt: String)
 	private data class RecordReference(val uri: String, val cid: String)
+	private data class ReplyReferences(val root: RecordReference, val parent: RecordReference)
+	private data class PostRecord(val reference: RecordReference, val value: JsonObject)
 
 	private const val SERVICE = "https://bsky.social"
 	private const val MAX_GRAPHEMES = 300
 	private const val IMAGES_PER_POST = 4
 	private const val MAX_IMAGE_BYTES = 2 * 1024 * 1024
+	private val POST_URL = Regex("""https://bsky\.app/profile/([^/]+)/post/([^/?#]+)""")
 
 }
