@@ -26,14 +26,17 @@ object CrosspostService {
 		endMessageId: Long,
 		channel: MessageChannelUnion
 	): CrosspostDraft {
+		require(ownerId == AaronServer.AARON_MEMBER_ID) {
+			"Only Aaron can create crossposts."
+		}
 		require(channel.idLong == AaronServer.PHILOSOPHY_CHANNEL_ID) {
 			"Crossposts can only be created from #philosophy."
 		}
 
 		val messages = DiscordMessageRangeReader.read(channel, startMessageId, endMessageId)
 		require(messages.isNotEmpty()) { "No messages were found." }
-		require(messages.all { message -> message.author.idLong == ownerId }) {
-			"Every selected message must be one of your own messages."
+		require(messages.all { message -> message.author.idLong == AaronServer.AARON_MEMBER_ID }) {
+			"Every selected message must be from Aaron."
 		}
 
 		val messageText = messages.map { message -> message.contentRaw.trim() }

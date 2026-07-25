@@ -2,6 +2,7 @@ package dev.aaronhowser.apps.knome.listener
 
 import dev.aaronhowser.apps.knome.KnomeBot
 import dev.aaronhowser.apps.knome.crosspost.CrosspostCommand
+import dev.aaronhowser.apps.knome.crosspost.CrosspostStatusCommand
 import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
 import kotlinx.coroutines.*
@@ -25,6 +26,12 @@ class CommandListener : ListenerAdapter() {
 			CrosspostCommand.COMMAND_NAME -> {
 				commandScope.launch {
 					CrosspostCommand.handleCrosspost(event)
+				}
+			}
+
+			CrosspostStatusCommand.COMMAND_NAME -> {
+				commandScope.launch {
+					CrosspostStatusCommand.handle(event)
 				}
 			}
 
@@ -53,6 +60,7 @@ class CommandListener : ListenerAdapter() {
 		event.jda.updateCommands()
 			.addCommands(
 				CrosspostCommand.getCommand(),
+				CrosspostStatusCommand.getCommand(),
 				QuoteCommand.getCommand(),
 				StopCommand.getCommand()
 			)

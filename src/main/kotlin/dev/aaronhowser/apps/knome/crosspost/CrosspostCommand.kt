@@ -1,5 +1,6 @@
 package dev.aaronhowser.apps.knome.crosspost
 
+import dev.aaronhowser.apps.knome.discord.AaronServer
 import dev.aaronhowser.apps.knome.discord.await
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission
@@ -28,9 +29,14 @@ object CrosspostCommand {
 	}
 
 	suspend fun handleCrosspost(event: SlashCommandInteractionEvent) {
+		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
+			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
+			return
+		}
 		event.deferReply(true).await()
 
 		try {
+			CrosspostConfiguration.requireConfigured()
 			val startId = parseMessageId(event.getOption(START_ARGUMENT)?.asString)
 			val endId = event.getOption(END_ARGUMENT)?.asString?.let { value -> parseMessageId(value) } ?: startId
 			val draft = CrosspostService.prepare(
@@ -50,6 +56,10 @@ object CrosspostCommand {
 
 	suspend fun handleButton(event: ButtonInteractionEvent) {
 		if (!event.componentId.startsWith(BUTTON_PREFIX)) {
+			return
+		}
+		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
+			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
 			return
 		}
 		event.deferEdit().await()
