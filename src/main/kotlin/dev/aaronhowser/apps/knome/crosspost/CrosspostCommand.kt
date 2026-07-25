@@ -33,10 +33,12 @@ object CrosspostCommand {
 			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
 			return
 		}
+
 		event.deferReply(true).await()
 
 		try {
 			CrosspostConfiguration.requireConfigured()
+
 			val startId = parseMessageId(event.getOption(START_ARGUMENT)?.asString)
 			val endId = event.getOption(END_ARGUMENT)?.asString?.let { value -> parseMessageId(value) } ?: startId
 			val draft = CrosspostService.prepare(
@@ -45,6 +47,7 @@ object CrosspostCommand {
 				endMessageId = endId,
 				channel = event.channel
 			)
+
 			event.hook.editOriginalEmbeds(createPreview(draft))
 				.setComponents(createButtons(draft.id))
 				.setFiles(draft.images.map { image -> FileUpload.fromData(image.data, image.fileName) })
@@ -58,10 +61,12 @@ object CrosspostCommand {
 		if (!event.componentId.startsWith(BUTTON_PREFIX)) {
 			return
 		}
+
 		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
 			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
 			return
 		}
+
 		event.deferEdit().await()
 
 		val parts = event.componentId.split(":", limit = 3)
@@ -105,6 +110,7 @@ object CrosspostCommand {
 				"❌ ${result.destination}: ${result.error}"
 			}
 		}
+
 		event.hook.editOriginal(description).await()
 		CrosspostAuditLog.publish(event.jda, draft.content, results)
 	}
@@ -128,6 +134,7 @@ object CrosspostCommand {
 			.setTitle(if (blueskyParts.size == 1) "Bluesky preview" else "Bluesky thread preview")
 			.setColor(0x1185FE)
 			.setDescription("${blueskyParts.size} post${if (blueskyParts.size == 1) "" else "s"} · ${draft.images.size} image(s)")
+
 		for (index in blueskyParts.indices.take(20)) {
 			val imagesForPart = draft.images.drop(index * 4).take(4).size
 			val value = buildString {
@@ -136,11 +143,14 @@ object CrosspostCommand {
 					append("\n\n🖼️ $imagesForPart image(s)")
 				}
 			}
+
 			blueskyPreview.addField("Post ${index + 1}", truncate(value, 1000), false)
 		}
+
 		if (blueskyParts.size > 20) {
 			blueskyPreview.addField("Additional posts", "${blueskyParts.size - 20} more", false)
 		}
+
 		return listOf(tumblrPreview, blueskyPreview.build())
 	}
 
@@ -148,6 +158,7 @@ object CrosspostCommand {
 		if (draft.images.isEmpty()) {
 			return "None"
 		}
+
 		return truncate(draft.images.joinToString("\n") { image -> "• ${image.fileName}" }, 1000)
 	}
 

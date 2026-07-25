@@ -2,12 +2,7 @@ package dev.aaronhowser.apps.knome.crosspost
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.*
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -15,8 +10,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -31,18 +25,23 @@ object TumblrPublisher {
 				val credentials = TumblrCredentials.fromEnvironment()
 				val url = "https://api.tumblr.com/v2/blog/${encode(credentials.blogIdentifier)}/posts"
 				val boundary = "Knome-${UUID.randomUUID()}"
+
 				val requestBody = createMultipartBody(draft, boundary)
 				val authorization = createAuthorization(url, credentials)
+
 				val request = HttpRequest.newBuilder(URI.create(url))
 					.header("Authorization", authorization)
 					.header("Content-Type", "multipart/form-data; boundary=$boundary")
 					.POST(HttpRequest.BodyPublishers.ofByteArray(requestBody))
 					.build()
+
 				val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 				require(response.statusCode() in 200..299) { tumblrError(response) }
+
 				val responseObject = json.parseToJsonElement(response.body()).jsonObject
 				val postId = responseObject["response"]!!.jsonObject["id"]!!.jsonPrimitive.content
 				val blogName = credentials.blogIdentifier.substringBefore(".tumblr.com")
+
 				CrosspostResult("Tumblr", "https://$blogName.tumblr.com/post/$postId")
 			}
 		} catch (exception: Exception) {
@@ -59,8 +58,10 @@ object TumblrPublisher {
 					put("text", message)
 				})
 			}
+
 			for (index in draft.images.indices) {
 				val image = draft.images[index]
+
 				add(buildJsonObject {
 					put("type", "image")
 					put("media", buildJsonArray {
@@ -71,12 +72,14 @@ object TumblrPublisher {
 							put("height", image.height)
 						})
 					})
+
 					if (image.description.isNotBlank()) {
 						put("alt_text", image.description)
 					}
 				})
 			}
 		}
+
 		val body = buildJsonObject {
 			put("content", content)
 			put("state", "published")
@@ -84,10 +87,12 @@ object TumblrPublisher {
 
 		val output = mutableListOf<Byte>()
 		appendPart(output, boundary, "json", null, "application/json", body.toByteArray())
+
 		for (index in draft.images.indices) {
 			val image = draft.images[index]
 			appendPart(output, boundary, identifiers[index], image.fileName, image.contentType, image.data)
 		}
+
 		append(output, "--$boundary--\r\n".toByteArray())
 		return output.toByteArray()
 	}
@@ -105,6 +110,7 @@ object TumblrPublisher {
 		} else {
 			"Content-Disposition: form-data; name=\"$name\"; filename=\"${fileName.replace("\"", "")}\"\r\n"
 		}
+
 		append(output, "--$boundary\r\n".toByteArray())
 		append(output, disposition.toByteArray())
 		append(output, "Content-Type: $contentType\r\n\r\n".toByteArray())
@@ -127,6 +133,7 @@ object TumblrPublisher {
 			"oauth_token" to credentials.accessToken,
 			"oauth_version" to "1.0"
 		)
+
 		val parameterString = oauth.entries.joinToString("&") { (key, value) -> "${encode(key)}=${encode(value)}" }
 		val signatureBase = "POST&${encode(url)}&${encode(parameterString)}"
 		val signingKey = "${encode(credentials.consumerSecret)}&${encode(credentials.accessTokenSecret)}"

@@ -26,12 +26,15 @@ object BlueskyPublisher {
 
 	fun previewParts(draft: CrosspostDraft): List<String> {
 		val parts = splitText(draft.content).toMutableList()
+
 		if (parts.isEmpty()) {
 			parts.add("")
 		}
+
 		while (parts.size * IMAGES_PER_POST < draft.images.size) {
 			parts.add("")
 		}
+
 		return parts
 	}
 
@@ -42,16 +45,22 @@ object BlueskyPublisher {
 				val password = environment(CrosspostConfiguration.BLUESKY_APP_PASSWORD)
 				val session = createSession(identifier, password)
 				val imageBlobs = uploadImages(session.accessToken, draft.images)
+
 				val parts = previewParts(draft)
 				var root: RecordReference? = null
 				var parent: RecordReference? = null
 
 				for (index in parts.indices) {
-					val images = imageBlobs.drop(index * IMAGES_PER_POST).take(IMAGES_PER_POST)
+					val images = imageBlobs
+						.drop(index * IMAGES_PER_POST)
+						.take(IMAGES_PER_POST)
+
 					val record = createPost(session, parts[index], images, root, parent)
+
 					if (root == null) {
 						root = record
 					}
+
 					parent = record
 				}
 
@@ -68,7 +77,9 @@ object BlueskyPublisher {
 			put("identifier", identifier)
 			put("password", password)
 		}
+
 		val response = postJson("$SERVICE/xrpc/com.atproto.server.createSession", body)
+
 		return BlueskySession(
 			handle = response["handle"]!!.jsonPrimitive.content,
 			did = response["did"]!!.jsonPrimitive.content,
@@ -78,20 +89,25 @@ object BlueskyPublisher {
 
 	private fun uploadImages(accessToken: String, images: List<CrosspostImage>): List<UploadedImage> {
 		val uploaded = mutableListOf<UploadedImage>()
+
 		for (image in images) {
 			require(image.data.size <= MAX_IMAGE_BYTES) {
 				"${image.fileName} is larger than Bluesky's 2 MB image limit."
 			}
+
 			val request = HttpRequest.newBuilder(URI.create("$SERVICE/xrpc/com.atproto.repo.uploadBlob"))
 				.header("Authorization", "Bearer $accessToken")
 				.header("Content-Type", image.contentType)
 				.POST(HttpRequest.BodyPublishers.ofByteArray(image.data))
 				.build()
+
 			val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 			require(response.statusCode() in 200..299) { apiError("Bluesky image upload", response) }
+
 			val blob = json.parseToJsonElement(response.body()).jsonObject["blob"]!!.jsonObject
 			uploaded.add(UploadedImage(blob, image.description))
 		}
+
 		return uploaded
 	}
 
@@ -103,12 +119,13 @@ object BlueskyPublisher {
 		parent: RecordReference?
 	): RecordReference {
 		val record = buildJsonObject {
-			put("\$type", "app.bsky.feed.post")
+			put($$"$type", "app.bsky.feed.post")
 			put("text", text)
 			put("createdAt", Instant.now().toString())
+
 			if (images.isNotEmpty()) {
 				put("embed", buildJsonObject {
-					put("\$type", "app.bsky.embed.images")
+					put($$"$type", "app.bsky.embed.images")
 					put("images", buildJsonArray {
 						for (image in images) {
 							add(buildJsonObject {
@@ -119,6 +136,7 @@ object BlueskyPublisher {
 					})
 				})
 			}
+
 			if (root != null && parent != null) {
 				put("reply", buildJsonObject {
 					put("root", root.toJson())
@@ -126,12 +144,15 @@ object BlueskyPublisher {
 				})
 			}
 		}
+
 		val body = buildJsonObject {
 			put("repo", session.did)
 			put("collection", "app.bsky.feed.post")
 			put("record", record)
 		}
+
 		val response = postJson("$SERVICE/xrpc/com.atproto.repo.createRecord", body, session.accessToken)
+
 		return RecordReference(
 			uri = response["uri"]!!.jsonPrimitive.content,
 			cid = response["cid"]!!.jsonPrimitive.content
@@ -141,11 +162,14 @@ object BlueskyPublisher {
 	private fun postJson(url: String, body: JsonObject, accessToken: String? = null): JsonObject {
 		val builder = HttpRequest.newBuilder(URI.create(url))
 			.header("Content-Type", "application/json")
+
 		if (accessToken != null) {
 			builder.header("Authorization", "Bearer $accessToken")
 		}
+
 		val request = builder.POST(HttpRequest.BodyPublishers.ofString(body.toString())).build()
 		val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
 		require(response.statusCode() in 200..299) { apiError("Bluesky", response) }
 		return json.parseToJsonElement(response.body()).jsonObject
 	}
@@ -156,6 +180,7 @@ object BlueskyPublisher {
 		} catch (_: Exception) {
 			null
 		}
+
 		return "$operation returned ${response.statusCode()}${message?.let { ": $it" }.orEmpty()}."
 	}
 
@@ -166,20 +191,24 @@ object BlueskyPublisher {
 
 		val parts = mutableListOf<String>()
 		var remaining = text.trim()
+
 		while (graphemeCount(remaining) > MAX_GRAPHEMES) {
 			val boundary = preferredBoundary(remaining)
 			parts.add(remaining.substring(0, boundary).trim())
 			remaining = remaining.substring(boundary).trim()
 		}
+
 		if (remaining.isNotEmpty()) {
 			parts.add(remaining)
 		}
+
 		return parts
 	}
 
 	private fun preferredBoundary(text: String): Int {
 		val iterator = BreakIterator.getCharacterInstance(Locale.ROOT)
 		iterator.setText(text)
+
 		var boundary = iterator.first()
 		repeat(MAX_GRAPHEMES) {
 			val next = iterator.next()
@@ -193,6 +222,7 @@ object BlueskyPublisher {
 		if (paragraphBreak > 0) {
 			return paragraphBreak
 		}
+
 		val whitespace = text.lastIndexOfAny(charArrayOf(' ', '\n', '\t'), boundary)
 		return if (whitespace > 0) whitespace else boundary
 	}
@@ -200,10 +230,12 @@ object BlueskyPublisher {
 	private fun graphemeCount(text: String): Int {
 		val iterator = BreakIterator.getCharacterInstance(Locale.ROOT)
 		iterator.setText(text)
+
 		var count = 0
 		while (iterator.next() != BreakIterator.DONE) {
 			count++
 		}
+
 		return count
 	}
 
@@ -227,4 +259,5 @@ object BlueskyPublisher {
 	private const val MAX_GRAPHEMES = 300
 	private const val IMAGES_PER_POST = 4
 	private const val MAX_IMAGE_BYTES = 2 * 1024 * 1024
+
 }

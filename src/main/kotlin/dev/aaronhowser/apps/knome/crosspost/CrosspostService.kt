@@ -1,18 +1,14 @@
 package dev.aaronhowser.apps.knome.crosspost
 
 import dev.aaronhowser.apps.knome.discord.AaronServer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 object CrosspostService {
@@ -29,6 +25,7 @@ object CrosspostService {
 		require(ownerId == AaronServer.AARON_MEMBER_ID) {
 			"Only Aaron can create crossposts."
 		}
+
 		require(channel.idLong == AaronServer.PHILOSOPHY_CHANNEL_ID) {
 			"Crossposts can only be created from #philosophy."
 		}
@@ -92,7 +89,11 @@ object CrosspostService {
 	private suspend fun downloadImages(messages: List<Message>): List<CrosspostImage> {
 		val attachments = messages.flatMap { message -> message.attachments }
 			.filter { attachment -> attachment.isImage }
-		require(attachments.size <= MAX_IMAGES) { "A crosspost can include at most $MAX_IMAGES images." }
+
+		require(attachments.size <= MAX_IMAGES) {
+			"A crosspost can include at most $MAX_IMAGES images."
+		}
+
 		require(attachments.sumOf { attachment -> attachment.size.toLong() } <= MAX_TOTAL_IMAGE_BYTES) {
 			"Crosspost images can total at most 20 MB."
 		}
@@ -102,7 +103,11 @@ object CrosspostService {
 			for (attachment in attachments) {
 				val request = HttpRequest.newBuilder(URI.create(attachment.proxyUrl)).GET().build()
 				val response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray())
-				require(response.statusCode() in 200..299) { "Could not download ${attachment.fileName}." }
+
+				require(response.statusCode() in 200..299) {
+					"Could not download ${attachment.fileName}."
+				}
+
 				images.add(
 					CrosspostImage(
 						fileName = attachment.fileName,
@@ -114,6 +119,7 @@ object CrosspostService {
 					)
 				)
 			}
+
 			images
 		}
 	}
