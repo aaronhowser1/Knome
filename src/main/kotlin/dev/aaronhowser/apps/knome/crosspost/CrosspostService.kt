@@ -46,6 +46,7 @@ object CrosspostService {
 			ownerId = ownerId,
 			channelId = channel.idLong,
 			messageIds = messages.map { message -> message.idLong },
+			messageLinks = messages.map { message -> message.jumpUrl },
 			messages = messageText.filter { content -> content.isNotBlank() },
 			images = downloadImages(messages),
 			createdAtMillis = System.currentTimeMillis()

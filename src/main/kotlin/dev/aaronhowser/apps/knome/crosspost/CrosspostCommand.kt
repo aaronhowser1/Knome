@@ -179,7 +179,7 @@ object CrosspostCommand {
 		if (trackingError != null) {
 			event.hook.editOriginal(description + "\n\n⚠️" + trackingError).await()
 		}
-		CrosspostAuditLog.publish(event.jda, draft.content, results)
+		CrosspostAuditLog.publish(event.jda, draft, results)
 	}
 
 	private fun parseMessageId(value: String?): Long {
@@ -198,7 +198,7 @@ object CrosspostCommand {
 		CrosspostConfiguration.requireConfigured()
 		val draft = CrosspostService.prepare(ownerId, startMessageId, endMessageId, channel)
 		val historySummary = try {
-			CrosspostRepository.getHistorySummary(draft.messageIds)
+			CrosspostRepository.getHistorySummary(draft)
 		} catch (_: Exception) {
 			"⚠️ Crosspost history is unavailable."
 		}

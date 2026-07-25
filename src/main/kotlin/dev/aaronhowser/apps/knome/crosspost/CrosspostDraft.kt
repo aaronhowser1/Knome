@@ -5,6 +5,7 @@ data class CrosspostDraft(
 	val ownerId: Long,
 	val channelId: Long,
 	val messageIds: List<Long>,
+	val messageLinks: List<String>,
 	val messages: List<String>,
 	val images: List<CrosspostImage>,
 	val createdAtMillis: Long

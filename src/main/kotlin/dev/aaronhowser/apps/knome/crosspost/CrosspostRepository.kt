@@ -19,28 +19,49 @@ object CrosspostRepository {
 	private val crossposts: MongoCollection<Document> =
 		QuoteRepository.database.getCollection("crossposts")
 
-	fun getHistorySummary(messageIds: List<Long>): String {
-		if (messageIds.isEmpty()) {
+	fun getHistorySummary(draft: CrosspostDraft): String {
+		if (draft.messageIds.isEmpty()) {
 			return "No Discord messages selected."
 		}
 
-		val destinationCounts = mutableMapOf<String, Int>()
+		val destinationsByMessageId = mutableMapOf<Long, MutableList<String>>()
 		val documents = crossposts.find(
-			Filters.`in`(MESSAGE_ID_FIELD, messageIds.map { messageId -> messageId.toString() })
+			Filters.`in`(MESSAGE_ID_FIELD, draft.messageIds.map { messageId -> messageId.toString() })
 		)
 		for (document in documents) {
+			val messageId = document.getString(MESSAGE_ID_FIELD).toLong()
 			val destination = document.getString(DESTINATION_FIELD)
-			destinationCounts[destination] = destinationCounts.getOrDefault(destination, 0) + 1
+			destinationsByMessageId.getOrPut(messageId) { mutableListOf() }.add(destination)
 		}
 
-		if (destinationCounts.isEmpty()) {
-			return "None of the ${messageIds.size} selected message(s) have been crossposted."
+		if (destinationsByMessageId.isEmpty()) {
+			return "None of the ${draft.messageIds.size} selected message(s) have been crossposted."
 		}
 
-		return listOf("Tumblr", "Bluesky").joinToString("\n") { destination ->
-			val count = destinationCounts.getOrDefault(destination, 0)
-			"$destination: $count/${messageIds.size} selected message(s)"
+		val lines = mutableListOf<String>()
+		for (index in draft.messageIds.indices) {
+			val messageId = draft.messageIds[index]
+			val destinations = destinationsByMessageId[messageId] ?: continue
+			lines.add("[Message ${index + 1}](${draft.messageLinks[index]}): ${destinations.sorted().joinToString(", ")}")
 		}
+
+		val unpostedCount = draft.messageIds.size - destinationsByMessageId.size
+		if (unpostedCount > 0) {
+			lines.add("$unpostedCount selected message(s) have not been crossposted.")
+		}
+
+		val visibleLines = mutableListOf<String>()
+		for (line in lines) {
+			if ((visibleLines + line).joinToString("\n").length > 900) {
+				break
+			}
+			visibleLines.add(line)
+		}
+		val omittedCount = lines.size - visibleLines.size
+		if (omittedCount > 0) {
+			visibleLines.add("…and $omittedCount more.")
+		}
+		return visibleLines.joinToString("\n")
 	}
 
 	fun recordSuccessfulPublications(draft: CrosspostDraft, results: List<CrosspostResult>) {
