@@ -15,9 +15,12 @@ object CrosspostRepository {
 	private const val DESTINATION_FIELD = "destination"
 	private const val URL_FIELD = "url"
 	private const val PUBLISHED_AT_FIELD = "published_at"
+	private const val SKIPPED_AT_FIELD = "skipped_at"
 
 	private val crossposts: MongoCollection<Document> =
 		QuoteRepository.database.getCollection("crossposts")
+	private val skippedCrossposts: MongoCollection<Document> =
+		QuoteRepository.database.getCollection("crosspost_skips")
 
 	fun getHistorySummary(draft: CrosspostDraft): String {
 		if (draft.messageIds.isEmpty()) {
@@ -33,19 +36,26 @@ object CrosspostRepository {
 			val destination = document.getString(DESTINATION_FIELD)
 			destinationsByMessageId.getOrPut(messageId) { mutableListOf() }.add(destination)
 		}
+		val skippedMessageIds = getSkippedMessageIds(draft.messageIds)
 
-		if (destinationsByMessageId.isEmpty()) {
+		if (destinationsByMessageId.isEmpty() && skippedMessageIds.isEmpty()) {
 			return "None of the ${draft.messageIds.size} selected message(s) have been crossposted."
 		}
 
 		val lines = mutableListOf<String>()
 		for (index in draft.messageIds.indices) {
 			val messageId = draft.messageIds[index]
-			val destinations = destinationsByMessageId[messageId] ?: continue
-			lines.add("[Message ${index + 1}](${draft.messageLinks[index]}): ${destinations.sorted().joinToString(", ")}")
+			val statuses = destinationsByMessageId[messageId]?.sorted()?.toMutableList() ?: mutableListOf()
+			if (messageId in skippedMessageIds) {
+				statuses.add("Skipped")
+			}
+			if (statuses.isNotEmpty()) {
+				lines.add("[Message ${index + 1}](${draft.messageLinks[index]}): ${statuses.joinToString(", ")}")
+			}
 		}
 
-		val unpostedCount = draft.messageIds.size - destinationsByMessageId.size
+		val handledMessageIds = destinationsByMessageId.keys + skippedMessageIds
+		val unpostedCount = draft.messageIds.size - handledMessageIds.size
 		if (unpostedCount > 0) {
 			lines.add("$unpostedCount selected message(s) have not been crossposted.")
 		}
@@ -84,5 +94,48 @@ object CrosspostRepository {
 				crossposts.replaceOne(filter, document, ReplaceOptions().upsert(true))
 			}
 		}
+	}
+
+	fun getHandledMessageIds(messageIds: List<Long>): Set<Long> {
+		if (messageIds.isEmpty()) {
+			return emptySet()
+		}
+
+		val handledMessageIds = mutableSetOf<Long>()
+		val messageIdStrings = messageIds.map { messageId -> messageId.toString() }
+		for (document in crossposts.find(Filters.`in`(MESSAGE_ID_FIELD, messageIdStrings))) {
+			handledMessageIds.add(document.getString(MESSAGE_ID_FIELD).toLong())
+		}
+		handledMessageIds.addAll(getSkippedMessageIds(messageIds))
+		return handledMessageIds
+	}
+
+	fun markSkipped(channelId: Long, messageId: Long) {
+		val messageIdString = messageId.toString()
+		val document = Document()
+			.append(ID_FIELD, messageIdString)
+			.append(CHANNEL_ID_FIELD, channelId.toString())
+			.append(MESSAGE_ID_FIELD, messageIdString)
+			.append(SKIPPED_AT_FIELD, Date())
+		skippedCrossposts.replaceOne(
+			Filters.eq(ID_FIELD, messageIdString),
+			document,
+			ReplaceOptions().upsert(true)
+		)
+	}
+
+	private fun getSkippedMessageIds(messageIds: List<Long>): Set<Long> {
+		if (messageIds.isEmpty()) {
+			return emptySet()
+		}
+
+		val skippedMessageIds = mutableSetOf<Long>()
+		val documents = skippedCrossposts.find(
+			Filters.`in`(MESSAGE_ID_FIELD, messageIds.map { messageId -> messageId.toString() })
+		)
+		for (document in documents) {
+			skippedMessageIds.add(document.getString(MESSAGE_ID_FIELD).toLong())
+		}
+		return skippedMessageIds
 	}
 }

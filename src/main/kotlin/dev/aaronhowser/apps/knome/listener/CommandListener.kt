@@ -2,6 +2,7 @@ package dev.aaronhowser.apps.knome.listener
 
 import dev.aaronhowser.apps.knome.KnomeBot
 import dev.aaronhowser.apps.knome.crosspost.CrosspostCommand
+import dev.aaronhowser.apps.knome.crosspost.CrosspostQueueCommand
 import dev.aaronhowser.apps.knome.crosspost.CrosspostStatusCommand
 import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
@@ -37,6 +38,12 @@ class CommandListener : ListenerAdapter() {
 				}
 			}
 
+			CrosspostQueueCommand.NEXT_COMMAND_NAME -> {
+				commandScope.launch {
+					CrosspostQueueCommand.handleNext(event)
+				}
+			}
+
 			QuoteCommand.COMMAND_NAME -> {
 				commandScope.launch {
 					QuoteCommand.handleQuote(event)
@@ -50,12 +57,18 @@ class CommandListener : ListenerAdapter() {
 	}
 
 	override fun onMessageContextInteraction(event: MessageContextInteractionEvent) {
-		if (event.name != CrosspostCommand.MESSAGE_COMMAND_NAME) {
-			return
-		}
+		when (event.name) {
+			CrosspostCommand.MESSAGE_COMMAND_NAME -> {
+				commandScope.launch {
+					CrosspostCommand.handleMessageCrosspost(event)
+				}
+			}
 
-		commandScope.launch {
-			CrosspostCommand.handleMessageCrosspost(event)
+			CrosspostQueueCommand.SKIP_COMMAND_NAME -> {
+				commandScope.launch {
+					CrosspostQueueCommand.handleSkip(event)
+				}
+			}
 		}
 	}
 
@@ -83,6 +96,8 @@ class CommandListener : ListenerAdapter() {
 			.addCommands(
 				CrosspostCommand.getCommand(),
 				CrosspostCommand.getMessageCommand(),
+				CrosspostQueueCommand.getNextCommand(),
+				CrosspostQueueCommand.getSkipCommand(),
 				CrosspostStatusCommand.getCommand(),
 				QuoteCommand.getCommand(),
 				StopCommand.getCommand()
