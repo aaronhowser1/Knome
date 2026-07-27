@@ -43,8 +43,8 @@ object CrosspostCommand {
 
 		return Commands.slash(COMMAND_NAME, "Publish messages from #philosophy")
 			.addOption(OptionType.STRING, START_ARGUMENT, "First message link or ID", true)
-			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
 			.addOptions(destinationOption)
+			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
 			.addOption(OptionType.STRING, PARENT_ARGUMENT, "Prior Knome crosspost message link to reply to", false)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
