@@ -14,14 +14,23 @@ class MessageListener : ListenerAdapter() {
 
 		if (author.isBot) return
 
-		if (message.mentions.isMentioned(event.jda.selfUser)) {
+		val content = message.contentRaw.lowercase()
+		val isMentioned = message.mentions.isMentioned(event.jda.selfUser)
+		val isThanked = content.contains("thank you knome")
+				|| isMentioned && content.contains("thank you")
+
+		if (isThanked) {
+			message.reply(YOUR_WELCOMES.random()).queue()
+			return
+		}
+
+		if (isMentioned) {
 			message.reply(getRandomInsult()).queue()
 			return
 		}
 
 		if (author.idLong == AaronServer.ARIEL_MEMBER_ID) {
 			val shouldInsult = Random.nextInt(100) == 0
-					|| message.contentRaw.lowercase().contains("be nice")
 
 			if (shouldInsult) {
 				message.reply(getRandomInsult()).queue()
@@ -60,6 +69,7 @@ class MessageListener : ListenerAdapter() {
 		)
 
 		val AFFIRMATIONS = listOf("so true", "real", "facts")
+		val YOUR_WELCOMES = listOf("de nada", "you're welcome", "your welcome")
 		val INSULTS = listOf(
 			"wrong",
 			"stfu",
