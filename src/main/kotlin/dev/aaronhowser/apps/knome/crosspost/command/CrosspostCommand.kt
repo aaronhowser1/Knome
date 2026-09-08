@@ -38,7 +38,7 @@ object CrosspostCommand {
 	private const val DESTINATION_ARGUMENT = "destination"
 	private const val PARENT_ARGUMENT = "parent"
 	private const val INDIVIDUAL_ARGUMENT = "individual"
-	private const val MODAL_PREFIX = "crosspost-range:"
+	const val MODAL_PREFIX = "crosspost-range:"
 	private const val MODAL_START_ID = "start-message"
 	private const val MODAL_END_ID = "end-message"
 	private const val DESTINATION_ID = "destination"

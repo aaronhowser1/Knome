@@ -1,120 +1,28 @@
 package dev.aaronhowser.apps.knome.listener
 
 import dev.aaronhowser.apps.knome.KnomeBot
-import dev.aaronhowser.apps.knome.crosspost.command.CrosspostCommand
-import dev.aaronhowser.apps.knome.crosspost.command.CrosspostQueueCommand
-import dev.aaronhowser.apps.knome.crosspost.command.CrosspostStatusCommand
-import dev.aaronhowser.apps.knome.crosspost.command.CrosspostSeriesCommand
-import dev.aaronhowser.apps.knome.crosspost.command.CrosspostThreadCommand
 import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
-import kotlinx.coroutines.*
-import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent
-import net.dv8tion.jda.api.events.interaction.command.MessageContextInteractionEvent
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.events.session.ReadyEvent
 import net.dv8tion.jda.api.hooks.ListenerAdapter
 
 class CommandListener : ListenerAdapter() {
 
-	private val exceptionHandler: CoroutineExceptionHandler =
-		CoroutineExceptionHandler { _, exception ->
-			KnomeBot.LOGGER.severe("Command failed: ${exception.stackTraceToString()}")
-		}
+	private val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+		KnomeBot.LOGGER.severe("Command failed: ${exception.stackTraceToString()}")
+	}
 
-	private val commandScope: CoroutineScope =
-		CoroutineScope(SupervisorJob() + Dispatchers.IO + exceptionHandler)
+	private val commandScope = CoroutineScope(SupervisorJob() + Dispatchers.IO + exceptionHandler)
 
 	override fun onSlashCommandInteraction(event: SlashCommandInteractionEvent) {
 		when (event.name) {
-			CrosspostCommand.COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostCommand.handleCrosspost(event)
-				}
-			}
-
-			CrosspostSeriesCommand.COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostSeriesCommand.handle(event)
-				}
-			}
-
-			CrosspostThreadCommand.COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostThreadCommand.handle(event)
-				}
-			}
-
-			CrosspostStatusCommand.COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostStatusCommand.handle(event)
-				}
-			}
-
-			CrosspostQueueCommand.NEXT_COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostQueueCommand.handleNext(event)
-				}
-			}
-
-			QuoteCommand.COMMAND_NAME -> {
-				commandScope.launch {
-					QuoteCommand.handleQuote(event)
-				}
-			}
-
-			StopCommand.COMMAND_NAME -> {
-				StopCommand.handleStop(event)
-			}
+			QuoteCommand.COMMAND_NAME -> commandScope.launch { QuoteCommand.handleQuote(event) }
+			StopCommand.COMMAND_NAME -> StopCommand.handleStop(event)
 		}
 	}
-
-	override fun onMessageContextInteraction(event: MessageContextInteractionEvent) {
-		when (event.name) {
-			CrosspostCommand.MESSAGE_COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostCommand.handleMessageCrosspost(event)
-				}
-			}
-
-			CrosspostQueueCommand.SKIP_COMMAND_NAME -> {
-				commandScope.launch {
-					CrosspostQueueCommand.handleSkip(event)
-				}
-			}
-		}
-	}
-
-	override fun onModalInteraction(event: ModalInteractionEvent) {
-		when {
-			event.modalId.startsWith("crosspost-range:") -> {
-				commandScope.launch {
-					CrosspostCommand.handleRangeModal(event)
-				}
-			}
-
-			event.modalId.startsWith(CrosspostQueueCommand.SKIP_MODAL_PREFIX) -> {
-				commandScope.launch {
-					CrosspostQueueCommand.handleSkipModal(event)
-				}
-			}
-		}
-	}
-
-	override fun onReady(event: ReadyEvent) {
-		event.jda.updateCommands()
-			.addCommands(
-				CrosspostCommand.getCommand(),
-				CrosspostSeriesCommand.getCommand(),
-				CrosspostThreadCommand.getCommand(),
-				CrosspostCommand.getMessageCommand(),
-				CrosspostQueueCommand.getNextCommand(),
-				CrosspostQueueCommand.getSkipCommand(),
-				CrosspostStatusCommand.getCommand(),
-				QuoteCommand.getCommand(),
-				StopCommand.getCommand()
-			)
-			.queue()
-	}
-
 }
