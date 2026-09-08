@@ -1,4 +1,4 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.service
 
 import dev.aaronhowser.apps.knome.discord.await
 import kotlinx.coroutines.Dispatchers

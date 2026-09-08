@@ -1,4 +1,6 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.persistence
+
+import dev.aaronhowser.apps.knome.crosspost.model.*
 
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters

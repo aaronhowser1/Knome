@@ -1,11 +1,11 @@
 package dev.aaronhowser.apps.knome.listener
 
 import dev.aaronhowser.apps.knome.KnomeBot
-import dev.aaronhowser.apps.knome.crosspost.CrosspostCommand
-import dev.aaronhowser.apps.knome.crosspost.CrosspostQueueCommand
-import dev.aaronhowser.apps.knome.crosspost.CrosspostStatusCommand
-import dev.aaronhowser.apps.knome.crosspost.CrosspostSeriesCommand
-import dev.aaronhowser.apps.knome.crosspost.CrosspostThreadCommand
+import dev.aaronhowser.apps.knome.crosspost.command.CrosspostCommand
+import dev.aaronhowser.apps.knome.crosspost.command.CrosspostQueueCommand
+import dev.aaronhowser.apps.knome.crosspost.command.CrosspostStatusCommand
+import dev.aaronhowser.apps.knome.crosspost.command.CrosspostSeriesCommand
+import dev.aaronhowser.apps.knome.crosspost.command.CrosspostThreadCommand
 import dev.aaronhowser.apps.knome.lifecycle.StopCommand
 import dev.aaronhowser.apps.knome.quote.QuoteCommand
 import kotlinx.coroutines.*

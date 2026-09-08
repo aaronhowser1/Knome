@@ -1,7 +1,10 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.service
 
+import dev.aaronhowser.apps.knome.crosspost.CrosspostConfiguration
+import dev.aaronhowser.apps.knome.crosspost.model.*
 import dev.aaronhowser.apps.knome.discord.AaronServer
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion
 import java.net.URI
@@ -11,7 +14,7 @@ import java.net.http.HttpResponse
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-object CrosspostService {
+object CrosspostDraftService {
 
 	private val drafts = ConcurrentHashMap<String, CrosspostDraft>()
 	private val httpClient = HttpClient.newHttpClient()
@@ -90,23 +93,6 @@ object CrosspostService {
 	fun claimDraft(id: String, ownerId: Long): CrosspostDraft? {
 		val draft = getDraft(id, ownerId) ?: return null
 		return if (drafts.remove(id, draft)) draft else null
-	}
-
-	suspend fun publish(
-		draft: CrosspostDraft,
-		destination: CrosspostDestination,
-		parent: CrosspostParent?
-	): List<CrosspostResult> {
-		return coroutineScope {
-			val publishers = mutableListOf<suspend () -> CrosspostResult>()
-			if (destination == CrosspostDestination.TUMBLR || destination == CrosspostDestination.BOTH) {
-				publishers.add { TumblrPublisher.publish(draft, parent?.tumblrUrl) }
-			}
-			if (destination == CrosspostDestination.BLUESKY || destination == CrosspostDestination.BOTH) {
-				publishers.add { BlueskyPublisher.publish(draft, parent?.blueskyUrl) }
-			}
-			publishers.map { publisher -> async { publisher() } }.awaitAll()
-		}
 	}
 
 	private suspend fun downloadImages(messages: List<Message>): List<CrosspostImage> {

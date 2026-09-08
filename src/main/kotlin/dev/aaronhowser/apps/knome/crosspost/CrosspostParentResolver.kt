@@ -1,5 +1,7 @@
 package dev.aaronhowser.apps.knome.crosspost
 
+import dev.aaronhowser.apps.knome.crosspost.model.CrosspostParent
+
 import dev.aaronhowser.apps.knome.discord.AaronServer
 import dev.aaronhowser.apps.knome.discord.await
 import net.dv8tion.jda.api.JDA

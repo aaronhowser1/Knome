@@ -1,4 +1,10 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.command
+
+import dev.aaronhowser.apps.knome.crosspost.*
+import dev.aaronhowser.apps.knome.crosspost.model.*
+import dev.aaronhowser.apps.knome.crosspost.persistence.CrosspostRepository
+import dev.aaronhowser.apps.knome.crosspost.service.CrosspostDraftService
+import dev.aaronhowser.apps.knome.crosspost.service.CrosspostPublishingService
 
 import dev.aaronhowser.apps.knome.discord.AaronServer
 import dev.aaronhowser.apps.knome.discord.await
@@ -209,8 +215,8 @@ object CrosspostCommand {
 		channel: MessageChannelUnion
 	): CrosspostDraft {
 		CrosspostConfiguration.requireConfigured()
-		val draft = CrosspostService.prepare(ownerId, startMessageId, endMessageId, channel)
-		CrosspostService.discardDraft(draft.id, ownerId)
+		val draft = CrosspostDraftService.prepare(ownerId, startMessageId, endMessageId, channel)
+		CrosspostDraftService.discardDraft(draft.id, ownerId)
 		return draft
 	}
 
@@ -221,7 +227,7 @@ object CrosspostCommand {
 		hook: InteractionHook
 	) {
 		hook.editOriginal("Publishing…").setEmbeds(emptyList()).setComponents(emptyList()).await()
-		val results = CrosspostService.publish(draft, destination, parent)
+		val results = CrosspostPublishingService.publish(draft, destination, parent)
 		val description = results.joinToString("\n") { result ->
 			if (result.succeeded) {
 				"✅ ${result.destination}: ${result.url}"
@@ -251,7 +257,7 @@ object CrosspostCommand {
 		channel: MessageChannelUnion,
 		hook: InteractionHook
 	) {
-		val drafts = CrosspostService.prepareIndividual(ownerId, startMessageId, endMessageId, channel)
+		val drafts = CrosspostDraftService.prepareIndividual(ownerId, startMessageId, endMessageId, channel)
 		for (index in drafts.indices) {
 			hook.editOriginal("Publishing message ${index + 1} of ${drafts.size}…").await()
 			publish(drafts[index], destination, null, hook)

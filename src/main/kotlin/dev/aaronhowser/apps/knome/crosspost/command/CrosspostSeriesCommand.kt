@@ -1,4 +1,6 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.command
+
+import dev.aaronhowser.apps.knome.crosspost.model.*
 
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 

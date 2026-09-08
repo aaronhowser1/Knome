@@ -1,4 +1,7 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.platform
+
+import dev.aaronhowser.apps.knome.crosspost.CrosspostConfiguration
+import dev.aaronhowser.apps.knome.crosspost.model.*
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -1,4 +1,4 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.model
 
 data class CrosspostDraft(
 	val id: String,

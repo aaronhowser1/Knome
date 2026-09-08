@@ -1,4 +1,6 @@
-package dev.aaronhowser.apps.knome.crosspost
+package dev.aaronhowser.apps.knome.crosspost.command
+
+import dev.aaronhowser.apps.knome.crosspost.CrosspostConfiguration
 
 import dev.aaronhowser.apps.knome.discord.AaronServer
 import dev.aaronhowser.apps.knome.discord.await
