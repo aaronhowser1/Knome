@@ -32,7 +32,11 @@ object CrosspostCommand {
 	const val COMMAND_NAME = "crosspost"
 	const val SERIES_COMMAND_NAME = "crosspost-series"
 	const val THREAD_COMMAND_NAME = "crosspost-thread"
-	const val MESSAGE_COMMAND_NAME = "Crosspost"
+	const val REPLY_THREAD_COMMAND_NAME = "crosspost-reply-thread"
+	const val MESSAGE_COMMAND_NAME = "Crosspost (Combined)"
+	const val SERIES_MESSAGE_COMMAND_NAME = "Crosspost (Separate)"
+	const val THREAD_MESSAGE_COMMAND_NAME = "Crosspost (Thread)"
+	const val REPLY_THREAD_MESSAGE_COMMAND_NAME = "Crosspost (Reply thread)"
 	private const val START_ARGUMENT = "start"
 	private const val END_ARGUMENT = "end"
 	private const val DESTINATION_ARGUMENT = "destination"
@@ -72,6 +76,15 @@ object CrosspostCommand {
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
 
+	fun getReplyThreadCommand(): SlashCommandData {
+		return Commands.slash(REPLY_THREAD_COMMAND_NAME, "Publish each message as a reply to the previous post")
+			.addOption(OptionType.STRING, START_ARGUMENT, "First message link or ID", true)
+			.addOptions(destinationOption())
+			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
+			.addOption(OptionType.STRING, PARENT_ARGUMENT, "Prior Knome crosspost message link to reply to", false)
+			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+	}
+
 	suspend fun handleThread(event: SlashCommandInteractionEvent) {
 		handleCrosspost(event, false)
 	}
@@ -87,6 +100,17 @@ object CrosspostCommand {
 
 	fun getMessageCommand(): CommandData {
 		return Commands.message(MESSAGE_COMMAND_NAME)
+			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
+	}
+
+	fun getSeriesMessageCommand(): CommandData = messageCommand(SERIES_MESSAGE_COMMAND_NAME)
+
+	fun getThreadMessageCommand(): CommandData = messageCommand(THREAD_MESSAGE_COMMAND_NAME)
+
+	fun getReplyThreadMessageCommand(): CommandData = messageCommand(REPLY_THREAD_MESSAGE_COMMAND_NAME)
+
+	private fun messageCommand(name: String): CommandData {
+		return Commands.message(name)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
 
@@ -118,7 +142,24 @@ object CrosspostCommand {
 		}
 	}
 
-	suspend fun handleMessageCrosspost(event: MessageContextInteractionEvent) {
+	suspend fun handleReplyThread(event: SlashCommandInteractionEvent) {
+		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
+			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
+			return
+		}
+		event.deferReply(true).await()
+		try {
+			val startId = parseMessageId(event.getOption(START_ARGUMENT)?.asString)
+			val endId = event.getOption(END_ARGUMENT)?.asString?.let { value -> parseMessageId(value) } ?: startId
+			val destination = parseDestination(event.getOption(DESTINATION_ARGUMENT)?.asString)
+			val parent = resolveParent(event.getOption(PARENT_ARGUMENT)?.asString, event)
+			publishReplyThread(event.user.idLong, startId, endId, destination, event.channel, event.hook, parent)
+		} catch (exception: Exception) {
+			event.hook.editOriginal("Could not publish the crosspost: ${exception.message}").await()
+		}
+	}
+
+	suspend fun handleMessageCrosspost(event: MessageContextInteractionEvent, mode: String = "combined") {
 		if (event.user.idLong != AaronServer.AARON_MEMBER_ID) {
 			event.reply("Only Aaron can use crosspost commands.").setEphemeral(true).await()
 			return
@@ -142,7 +183,8 @@ object CrosspostCommand {
 		val modeMenu = StringSelectMenu.create(INDIVIDUAL_ARGUMENT)
 			.addOption("One combined crosspost", "combined")
 			.addOption("Separate post for each message", "individual")
-			.setDefaultValues("combined")
+			.addOption("Reply thread from each message", "reply-thread")
+			.setDefaultValues(mode)
 			.build()
 		val parentInput = TextInput.create(PARENT_MESSAGE_ID, TextInputStyle.SHORT)
 			.setPlaceholder("Optional Knome crosspost audit message link")
@@ -160,6 +202,22 @@ object CrosspostCommand {
 			.build()
 
 		event.replyModal(modal).await()
+	}
+
+	private suspend fun publishReplyThread(ownerId: Long, start: Long, end: Long, destination: CrosspostDestination, channel: MessageChannelUnion, hook: InteractionHook, initialParent: CrosspostParent?) {
+		val drafts = CrosspostDraftService.prepareIndividual(ownerId, start, end, channel)
+		var parent = initialParent
+		for (index in drafts.indices) {
+			hook.editOriginal("Publishing message ${index + 1} of ${drafts.size}…").await()
+			val results = CrosspostPublishingService.publish(drafts[index], destination, parent)
+			CrosspostRepository.recordSuccessfulPublications(drafts[index], results)
+			CrosspostAuditLog.publish(hook.jda, drafts[index], results)
+			parent = CrosspostParent(
+				results.firstOrNull { it.destination == "Bluesky" && it.succeeded }?.url,
+				results.firstOrNull { it.destination == "Tumblr" && it.succeeded }?.url
+			)
+		}
+		hook.editOriginal("Reply thread published.").await()
 	}
 
 	suspend fun handleRangeModal(event: ModalInteractionEvent) {
@@ -185,8 +243,10 @@ object CrosspostCommand {
 			val endId = if (endValue.isNullOrBlank()) startId else parseMessageId(endValue)
 			val destination = parseDestination(event.getValue(DESTINATION_ID)?.asStringList?.singleOrNull())
 			val parent = resolveParent(event.getValue(PARENT_MESSAGE_ID)?.asString, event)
-			val individual = event.getValue(INDIVIDUAL_ARGUMENT)?.asStringList?.singleOrNull() == "individual"
-			if (individual) {
+			val mode = event.getValue(INDIVIDUAL_ARGUMENT)?.asStringList?.singleOrNull() ?: "combined"
+			if (mode == "reply-thread") {
+				publishReplyThread(event.user.idLong, startId, endId, destination, event.channel, event.hook, parent)
+			} else if (mode == "individual") {
 				require(parent == null) { "Individual posts cannot reply to a prior crosspost." }
 				publishIndividual(event.user.idLong, startId, endId, destination, event.channel, event.hook)
 			} else {

@@ -30,6 +30,7 @@ class CrosspostInteractionListener : ListenerAdapter() {
 			CrosspostCommand.COMMAND_NAME -> launch { CrosspostCommand.handleCrosspost(event) }
 			CrosspostSeriesCommand.COMMAND_NAME -> launch { CrosspostSeriesCommand.handle(event) }
 			CrosspostThreadCommand.COMMAND_NAME -> launch { CrosspostThreadCommand.handle(event) }
+			CrosspostCommand.REPLY_THREAD_COMMAND_NAME -> launch { CrosspostCommand.handleReplyThread(event) }
 			CrosspostStatusCommand.COMMAND_NAME -> launch { CrosspostStatusCommand.handle(event) }
 			CrosspostQueueCommand.NEXT_COMMAND_NAME -> launch { CrosspostQueueCommand.handleNext(event) }
 		}
@@ -37,7 +38,10 @@ class CrosspostInteractionListener : ListenerAdapter() {
 
 	override fun onMessageContextInteraction(event: MessageContextInteractionEvent) {
 		when (event.name) {
-			CrosspostCommand.MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event) }
+			CrosspostCommand.MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "combined") }
+			CrosspostCommand.SERIES_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "individual") }
+			CrosspostCommand.THREAD_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "combined") }
+			CrosspostCommand.REPLY_THREAD_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "reply-thread") }
 			CrosspostQueueCommand.SKIP_COMMAND_NAME -> launch { CrosspostQueueCommand.handleSkip(event) }
 		}
 	}
@@ -55,7 +59,11 @@ class CrosspostInteractionListener : ListenerAdapter() {
 				CrosspostCommand.getCommand(),
 				CrosspostSeriesCommand.getCommand(),
 				CrosspostThreadCommand.getCommand(),
+				CrosspostCommand.getReplyThreadCommand(),
 				CrosspostCommand.getMessageCommand(),
+				CrosspostCommand.getSeriesMessageCommand(),
+				CrosspostCommand.getThreadMessageCommand(),
+				CrosspostCommand.getReplyThreadMessageCommand(),
 				CrosspostQueueCommand.getNextCommand(),
 				CrosspostQueueCommand.getSkipCommand(),
 				CrosspostStatusCommand.getCommand()
