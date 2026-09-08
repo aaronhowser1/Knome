@@ -57,6 +57,22 @@ object CrosspostService {
 		return draft
 	}
 
+	suspend fun prepareIndividual(
+		ownerId: Long,
+		startMessageId: Long,
+		endMessageId: Long,
+		channel: MessageChannelUnion
+	): List<CrosspostDraft> {
+		val messages = DiscordMessageRangeReader.read(channel, startMessageId, endMessageId)
+		val drafts = mutableListOf<CrosspostDraft>()
+		for (message in messages) {
+			val draft = prepare(ownerId, message.idLong, message.idLong, channel)
+			discardDraft(draft.id, ownerId)
+			drafts.add(draft)
+		}
+		return drafts
+	}
+
 	fun getDraft(id: String, ownerId: Long): CrosspostDraft? {
 		val draft = drafts[id] ?: return null
 		if (draft.ownerId != ownerId || isExpired(draft)) {
