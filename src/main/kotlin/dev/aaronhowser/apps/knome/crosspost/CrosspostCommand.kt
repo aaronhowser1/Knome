@@ -71,7 +71,7 @@ object CrosspostCommand {
 	}
 
 	private fun destinationOption(): OptionData {
-		val destinationOption = OptionData(OptionType.STRING, DESTINATION_ARGUMENT, "Where to publish", true)
+		val destinationOption = OptionData(OptionType.STRING, DESTINATION_ARGUMENT, "Where to publish", false)
 			.addChoice("Publish both", "both")
 			.addChoice("Tumblr only", "tumblr")
 			.addChoice("Bluesky only", "bluesky")
@@ -194,6 +194,7 @@ object CrosspostCommand {
 
 	private fun parseDestination(value: String?): CrosspostDestination {
 		return when (value) {
+			null, "" -> CrosspostDestination.BOTH
 			"tumblr" -> CrosspostDestination.TUMBLR
 			"bluesky" -> CrosspostDestination.BLUESKY
 			"both" -> CrosspostDestination.BOTH
