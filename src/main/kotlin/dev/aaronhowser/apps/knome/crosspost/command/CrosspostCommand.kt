@@ -51,6 +51,7 @@ object CrosspostCommand {
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Publish one message from #philosophy")
 			.addOption(OptionType.STRING, START_ARGUMENT, "Message link or ID", true)
+			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
 			.addOptions(destinationOption())
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
@@ -68,7 +69,7 @@ object CrosspostCommand {
 	}
 
 	fun getThreadCommand(): SlashCommandData {
-		return Commands.slash(THREAD_COMMAND_NAME, "Publish a message range as one threaded crosspost")
+		return Commands.slash(THREAD_COMMAND_NAME, "Publish each message as a reply to the previous post")
 			.addOption(OptionType.STRING, START_ARGUMENT, "First message link or ID", true)
 			.addOptions(destinationOption())
 			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
@@ -86,7 +87,7 @@ object CrosspostCommand {
 	}
 
 	suspend fun handleThread(event: SlashCommandInteractionEvent) {
-		handleCrosspost(event, false)
+		handleReplyThread(event)
 	}
 
 	private fun destinationOption(): OptionData {

@@ -40,7 +40,7 @@ class CrosspostInteractionListener : ListenerAdapter() {
 		when (event.name) {
 			CrosspostCommand.MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "combined") }
 			CrosspostCommand.SERIES_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "individual") }
-			CrosspostCommand.THREAD_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "combined") }
+			CrosspostCommand.THREAD_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "reply-thread") }
 			CrosspostCommand.REPLY_THREAD_MESSAGE_COMMAND_NAME -> launch { CrosspostCommand.handleMessageCrosspost(event, "reply-thread") }
 			CrosspostQueueCommand.SKIP_COMMAND_NAME -> launch { CrosspostQueueCommand.handleSkip(event) }
 		}
