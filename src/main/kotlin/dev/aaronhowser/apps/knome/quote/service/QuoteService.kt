@@ -1,4 +1,7 @@
-package dev.aaronhowser.apps.knome.quote
+package dev.aaronhowser.apps.knome.quote.service
+
+import dev.aaronhowser.apps.knome.quote.model.Quote
+import dev.aaronhowser.apps.knome.quote.persistence.QuoteRepository
 
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters

@@ -5,7 +5,7 @@ import dev.aaronhowser.apps.knome.discord.await
 import dev.aaronhowser.apps.knome.listener.CommandListener
 import dev.aaronhowser.apps.knome.listener.CrosspostInteractionListener
 import dev.aaronhowser.apps.knome.listener.MessageListener
-import dev.aaronhowser.apps.knome.quote.QuoteRepository
+import dev.aaronhowser.apps.knome.quote.persistence.QuoteRepository
 import kotlinx.coroutines.runBlocking
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.JDABuilder

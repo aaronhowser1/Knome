@@ -5,7 +5,7 @@ import dev.aaronhowser.apps.knome.crosspost.model.*
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions
-import dev.aaronhowser.apps.knome.quote.QuoteRepository
+import dev.aaronhowser.apps.knome.quote.persistence.QuoteRepository
 import org.bson.Document
 import java.util.Date
 

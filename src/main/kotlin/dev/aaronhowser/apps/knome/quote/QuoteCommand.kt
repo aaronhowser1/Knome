@@ -2,7 +2,9 @@ package dev.aaronhowser.apps.knome.quote
 
 import dev.aaronhowser.apps.knome.KnomeBot
 import dev.aaronhowser.apps.knome.discord.await
-import dev.aaronhowser.apps.knome.quote.Quote.Companion.getEmbedDescription
+import dev.aaronhowser.apps.knome.quote.model.Quote
+import dev.aaronhowser.apps.knome.quote.model.Quote.Companion.getEmbedDescription
+import dev.aaronhowser.apps.knome.quote.service.QuoteService
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.Permission
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
