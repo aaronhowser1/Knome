@@ -51,7 +51,6 @@ object CrosspostCommand {
 	fun getCommand(): SlashCommandData {
 		return Commands.slash(COMMAND_NAME, "Publish one message from #philosophy")
 			.addOption(OptionType.STRING, START_ARGUMENT, "Message link or ID", true)
-			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
 			.addOptions(destinationOption())
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
@@ -72,7 +71,7 @@ object CrosspostCommand {
 		return Commands.slash(THREAD_COMMAND_NAME, "Publish each message as a reply to the previous post")
 			.addOption(OptionType.STRING, START_ARGUMENT, "First message link or ID", true)
 			.addOptions(destinationOption())
-			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
+			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", true)
 			.addOption(OptionType.STRING, PARENT_ARGUMENT, "Prior Knome crosspost message link to reply to", false)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
@@ -81,7 +80,7 @@ object CrosspostCommand {
 		return Commands.slash(REPLY_THREAD_COMMAND_NAME, "Publish each message as a reply to the previous post")
 			.addOption(OptionType.STRING, START_ARGUMENT, "First message link or ID", true)
 			.addOptions(destinationOption())
-			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", false)
+			.addOption(OptionType.STRING, END_ARGUMENT, "Last message link or ID", true)
 			.addOption(OptionType.STRING, PARENT_ARGUMENT, "Prior Knome crosspost message link to reply to", false)
 			.setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.ADMINISTRATOR))
 	}
