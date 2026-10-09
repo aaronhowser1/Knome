@@ -5,6 +5,7 @@ import dev.aaronhowser.apps.knome.crosspost.model.*
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.ReplaceOptions
+import com.mongodb.client.model.Sorts
 import dev.aaronhowser.apps.knome.quote.persistence.QuoteRepository
 import org.bson.Document
 import java.util.Date
@@ -77,6 +78,7 @@ object CrosspostRepository {
 	}
 
 	fun recordSuccessfulPublications(draft: CrosspostDraft, results: List<CrosspostResult>) {
+		val publishedAt = Date()
 		for (result in results) {
 			if (!result.succeeded || result.url == null) {
 				continue
@@ -91,11 +93,39 @@ object CrosspostRepository {
 					.append(MESSAGE_ID_FIELD, messageId.toString())
 					.append(DESTINATION_FIELD, result.destination)
 					.append(URL_FIELD, result.url)
-					.append(PUBLISHED_AT_FIELD, Date())
+					.append(PUBLISHED_AT_FIELD, publishedAt)
 
 				crossposts.replaceOne(filter, document, ReplaceOptions().upsert(true))
 			}
 		}
+	}
+
+	fun getPublications(messageId: Long): CrosspostParent? {
+		var blueskyUrl: String? = null
+		var tumblrUrl: String? = null
+		val documents = crossposts.find(Filters.eq(MESSAGE_ID_FIELD, messageId.toString()))
+		for (document in documents) {
+			when (document.getString(DESTINATION_FIELD)) {
+				"Bluesky" -> blueskyUrl = document.getString(URL_FIELD)
+				"Tumblr" -> tumblrUrl = document.getString(URL_FIELD)
+			}
+		}
+		if (blueskyUrl == null && tumblrUrl == null) {
+			return null
+		}
+		return CrosspostParent(blueskyUrl, tumblrUrl)
+	}
+
+	fun getMostRecentPublications(): CrosspostParent {
+		val mostRecentDocument = crossposts.find()
+			.sort(Sorts.descending(PUBLISHED_AT_FIELD))
+			.first()
+		if (mostRecentDocument == null) {
+			return CrosspostParent(null, null)
+		}
+
+		val messageId = mostRecentDocument.getString(MESSAGE_ID_FIELD).toLong()
+		return getPublications(messageId) ?: CrosspostParent(null, null)
 	}
 
 	fun getHandledMessageIds(messageIds: List<Long>): Set<Long> {

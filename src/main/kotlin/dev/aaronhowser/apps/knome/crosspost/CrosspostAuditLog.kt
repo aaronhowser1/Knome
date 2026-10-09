@@ -1,6 +1,7 @@
 package dev.aaronhowser.apps.knome.crosspost
 
 import dev.aaronhowser.apps.knome.crosspost.model.CrosspostDraft
+import dev.aaronhowser.apps.knome.crosspost.model.CrosspostParent
 import dev.aaronhowser.apps.knome.crosspost.model.CrosspostResult
 
 import dev.aaronhowser.apps.knome.discord.AaronServer
@@ -34,6 +35,31 @@ object CrosspostAuditLog {
 		for (result in results) {
 			val value = result.url ?: "Failed: ${result.error}"
 			embed.addField(result.destination, value.take(1000), false)
+		}
+
+		AaronServer.getPhilosophyCrossposts(jda).sendMessageEmbeds(embed.build()).queue()
+	}
+
+	fun publishRejection(
+		jda: JDA,
+		messageLink: String,
+		reason: String,
+		originalPublications: CrosspostParent? = null
+	) {
+		val embed = EmbedBuilder()
+			.setTitle("Cross-post rejected")
+			.setColor(0xED4245)
+			.setDescription(reason)
+			.addField("Discord message", messageLink, false)
+			.setFooter("Knome Bot")
+
+		val tumblrUrl = originalPublications?.tumblrUrl
+		if (tumblrUrl != null) {
+			embed.addField("Original Tumblr post", tumblrUrl, false)
+		}
+		val blueskyUrl = originalPublications?.blueskyUrl
+		if (blueskyUrl != null) {
+			embed.addField("Original Bluesky post", blueskyUrl, false)
 		}
 
 		AaronServer.getPhilosophyCrossposts(jda).sendMessageEmbeds(embed.build()).queue()
